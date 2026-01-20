@@ -1,0 +1,260 @@
+/* Admin Panel Styles */
+:root {
+  --admin-bg: #f5f5f5;
+  --admin-sidebar-bg: #000000;
+  --admin-header-bg: #C1121F;
+}
+
+.admin-panel {
+  min-height: 100vh;
+  background: var(--admin-bg);
+}
+
+.admin-header {
+  background: var(--admin-header-bg);
+  color: white;
+  padding: 16px 0;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+  position: sticky;
+  top: 0;
+  z-index: 100;
+}
+
+.admin-header-content {
+  max-width: 1400px;
+  margin: 0 auto;
+  padding: 0 16px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.admin-header h1 {
+  font-size: 24px;
+  font-weight: 700;
+  margin: 0;
+  letter-spacing: 1px;
+}
+
+.admin-user-info {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+}
+
+.user-email {
+  font-size: 13px;
+  opacity: 0.9;
+}
+
+.logout-btn {
+  padding: 8px 16px;
+  background: rgba(255, 255, 255, 0.2);
+  color: white;
+  border: 1px solid rgba(255, 255, 255, 0.3);
+  border-radius: 4px;
+  font-size: 12px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: background 200ms ease;
+}
+
+.logout-btn:hover:not(:disabled) {
+  background: rgba(255, 255, 255, 0.3);
+}
+
+.logout-btn:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+.admin-content {
+  display: flex;
+  max-width: 1400px;
+  margin: 0 auto;
+  min-height: calc(100vh - 60px);
+}
+
+.admin-sidebar {
+  width: 220px;
+  background: var(--admin-sidebar-bg);
+  padding: 16px 0;
+  position: sticky;
+  top: 60px;
+  height: calc(100vh - 60px);
+}
+
+.admin-sidebar ul {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+}
+
+.admin-sidebar li {
+  margin: 0;
+}
+
+.admin-sidebar a {
+  display: block;
+  color: white;
+  text-decoration: none;
+  padding: 12px 16px;
+  font-size: 14px;
+  font-weight: 600;
+  transition: background 200ms ease;
+}
+
+.admin-sidebar a:hover {
+  background: rgba(193, 18, 31, 0.3);
+}
+
+.admin-main {
+  flex: 1;
+  padding: 32px;
+}
+
+.admin-section {
+  background: white;
+  padding: 24px;
+  margin-bottom: 24px;
+  border-radius: 8px;
+  box-shadow: 0 1px 4px rgba(0, 0, 0, 0.08);
+}
+
+.admin-section h2 {
+  font-size: 20px;
+  font-weight: 700;
+  margin: 0 0 16px 0;
+  color: var(--black);
+}
+
+.admin-section p {
+  color: rgba(0, 0, 0, 0.6);
+  margin: 0;
+}
+
+.admin-section-content {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 24px;
+  align-items: start;
+}
+
+.form-container,
+.list-container {
+  min-height: 400px;
+}
+
+.form-container h3 {
+  display: none;
+}
+
+@media (max-width: 1200px) {
+  .admin-section-content {
+    grid-template-columns: 1fr;
+    gap: 16px;
+  }
+}
+
+@media (max-width: 900px) {
+  .admin-content {
+    flex-direction: column;
+  }
+
+  .admin-sidebar {
+    width: 100%;
+    height: auto;
+    display: flex;
+    position: sticky;
+    top: 60px;
+    background: var(--admin-sidebar-bg);
+    padding: 0;
+    overflow-x: auto;
+  }
+
+  .admin-sidebar ul {
+    display: flex;
+    gap: 0;
+  }
+
+  .admin-sidebar li {
+    flex-shrink: 0;
+  }
+
+  .admin-main {
+    padding: 16px;
+  }
+}
+
+@media (max-width: 768px) {
+  .admin-main {
+    padding: 16px;
+  }
+
+  .admin-section {
+    padding: 16px;
+  }
+
+  .admin-section h2 {
+    font-size: 18px;
+  }
+
+  .form-container,
+  .list-container {
+    min-height: auto;
+  }
+}
+
+@media (max-width: 520px) {
+  .admin-header-content {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 12px;
+  }
+
+  .admin-header h1 {
+    font-size: 18px;
+  }
+
+  .admin-user-info {
+    width: 100%;
+    flex-direction: column;
+    gap: 8px;
+  }
+
+  .user-email {
+    font-size: 12px;
+  }
+
+  .logout-btn {
+    width: 100%;
+  }
+
+  .admin-main {
+    padding: 8px;
+  }
+
+  .admin-section {
+    padding: 12px;
+    margin-bottom: 16px;
+  }
+
+  .admin-section h2 {
+    font-size: 16px;
+    margin-bottom: 12px;
+  }
+
+  .admin-section-content {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+    align-items: stretch;
+  }
+
+  .form-container,
+  .list-container {
+    min-height: auto;
+    width: 100%;
+    box-sizing: border-box;
+  }
+}
