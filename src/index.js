@@ -6,7 +6,12 @@ import App from './App';
 import { AuthProvider } from './context/AuthContext';
 import AdminLogin from './pages/AdminLogin';
 import AdminPanel from './pages/AdminPanel';
+import AdminAnnouncements from './pages/AdminAnnouncements';
+import AdminUpdates from './pages/AdminUpdates';
+import AdminConfessions from './pages/AdminConfessions';
 import ConfessionDetail from './pages/ConfessionDetail';
+import Contacts from './pages/Contacts';
+import About from './pages/About';
 import ProtectedRoute from './components/ProtectedRoute';
 import reportWebVitals from './reportWebVitals';
 
@@ -19,6 +24,8 @@ root.render(
           {/* Public routes */}
           <Route path="/" element={<App />} />
           <Route path="/confession/:confessionId" element={<ConfessionDetail />} />
+          <Route path="/contacts" element={<Contacts />} />
+          <Route path="/about" element={<About />} />
           <Route path="/admin/login" element={<AdminLogin />} />
 
           {/* Protected admin routes */}
@@ -27,6 +34,30 @@ root.render(
             element={
               <ProtectedRoute>
                 <AdminPanel />
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/admin/announcements"
+            element={
+              <ProtectedRoute>
+                <AdminAnnouncements />
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/admin/updates"
+            element={
+              <ProtectedRoute>
+                <AdminUpdates />
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/admin/confessions"
+            element={
+              <ProtectedRoute>
+                <AdminConfessions />
               </ProtectedRoute>
             }
           />

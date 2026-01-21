@@ -7,6 +7,8 @@ import {
   where,
   orderBy,
   deleteDoc,
+  updateDoc,
+  getDoc,
   serverTimestamp,
 } from 'firebase/firestore';
 import { db } from '../firebase/config';
@@ -145,10 +147,68 @@ export async function deleteComment(commentId, confessionId) {
  */
 export async function flagComment(commentId) {
   try {
-    // Will implement this in future versions with updateDoc
-    console.log('Flag comment:', commentId);
+    const docRef = doc(db, COMMENTS_COLLECTION, commentId);
+    const comment = await getDoc(docRef);
+
+    if (!comment.exists()) {
+      throw new Error('Comment not found');
+    }
+
+    const currentFlagCount = comment.data().flagCount || 0;
+    await updateDoc(docRef, {
+      flagCount: currentFlagCount + 1,
+      updatedAt: serverTimestamp(),
+    });
   } catch (error) {
     console.error('Error flagging comment:', error);
+    throw error;
+  }
+}
+
+/**
+ * Moderate a comment (mark as approved/rejected with reason)
+ * @param {string} commentId - ID of the comment
+ * @param {boolean} approved - Whether to approve or reject
+ * @param {string} reason - Moderation reason
+ */
+export async function moderateComment(commentId, approved, reason = '') {
+  try {
+    const docRef = doc(db, COMMENTS_COLLECTION, commentId);
+    await updateDoc(docRef, {
+      moderated: true,
+      approved,
+      reason,
+      moderatedAt: serverTimestamp(),
+      updatedAt: serverTimestamp(),
+    });
+  } catch (error) {
+    console.error('Error moderating comment:', error);
+    throw error;
+  }
+}
+
+/**
+ * Get all flagged comments for a specific confession
+ */
+export async function getFlaggedCommentsByConfession(confessionId) {
+  try {
+    const q = query(
+      collection(db, COMMENTS_COLLECTION),
+      where('confessionId', '==', confessionId),
+      where('flagCount', '>', 0),
+      orderBy('flagCount', 'desc'),
+      orderBy('createdAt', 'desc')
+    );
+
+    const querySnapshot = await getDocs(q);
+    return querySnapshot.docs.map((doc) => ({
+      id: doc.id,
+      ...doc.data(),
+      createdAt: doc.data().createdAt?.toDate?.() || new Date(),
+      updatedAt: doc.data().updatedAt?.toDate?.() || new Date(),
+    }));
+  } catch (error) {
+    console.error('Error fetching flagged comments:', error);
     throw error;
   }
 }
@@ -159,6 +219,8 @@ const commentsService = {
   getRepliesByCommentId,
   deleteComment,
   flagComment,
+  moderateComment,
+  getFlaggedCommentsByConfession,
 };
 
 export default commentsService;

@@ -1,0 +1,266 @@
+/* Contacts Page */
+.contacts-container {
+  min-height: calc(100vh - 200px);
+  background: linear-gradient(135deg, #f5f7fa 0%, #f0f4f8 100%);
+  padding: 40px 20px;
+}
+
+.contacts-wrapper {
+  max-width: 1000px;
+  margin: 0 auto;
+}
+
+.contacts-container h1 {
+  font-size: 48px;
+  color: #111827;
+  margin-bottom: 16px;
+  text-align: center;
+  font-weight: 700;
+}
+
+.contacts-intro {
+  text-align: center;
+  font-size: 16px;
+  color: #6b7280;
+  margin-bottom: 48px;
+  max-width: 600px;
+  margin-left: auto;
+  margin-right: auto;
+}
+
+.contacts-content {
+  display: grid;
+  grid-template-columns: 1fr 1.2fr;
+  gap: 40px;
+  animation: slideIn 0.3s ease;
+}
+
+/* Contact Info Section */
+.contact-info {
+  background: white;
+  padding: 32px;
+  border-radius: 12px;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
+  border: 1px solid #e5e7eb;
+  height: fit-content;
+}
+
+.contact-info h2 {
+  font-size: 24px;
+  color: #111827;
+  margin-bottom: 24px;
+  font-weight: 600;
+}
+
+.info-item {
+  margin-bottom: 24px;
+  padding-bottom: 24px;
+  border-bottom: 1px solid #f0f0f0;
+}
+
+.info-item:last-child {
+  border-bottom: none;
+  margin-bottom: 0;
+  padding-bottom: 0;
+}
+
+.info-item h3 {
+  font-size: 14px;
+  color: #6b7280;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  margin-bottom: 8px;
+}
+
+.info-item p {
+  font-size: 16px;
+  color: #111827;
+  line-height: 1.6;
+  margin: 0;
+}
+
+/* Contact Form */
+.contact-form {
+  background: white;
+  padding: 32px;
+  border-radius: 12px;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
+  border: 1px solid #e5e7eb;
+  animation: slideIn 0.4s ease;
+}
+
+.contact-form h2 {
+  font-size: 24px;
+  color: #111827;
+  margin-bottom: 24px;
+  font-weight: 600;
+}
+
+.form-group {
+  margin-bottom: 20px;
+}
+
+.form-group label {
+  display: block;
+  font-size: 14px;
+  font-weight: 600;
+  color: #111827;
+  margin-bottom: 8px;
+}
+
+.form-group input,
+.form-group textarea {
+  width: 100%;
+  padding: 12px;
+  border: 1px solid #ddd;
+  border-radius: 8px;
+  font-size: 14px;
+  font-family: inherit;
+  transition: all 0.2s;
+}
+
+.form-group input:focus,
+.form-group textarea:focus {
+  outline: none;
+  border-color: #667eea;
+  box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
+}
+
+.form-group textarea {
+  resize: vertical;
+  min-height: 120px;
+}
+
+.submit-btn {
+  width: 100%;
+  padding: 12px 24px;
+  background: #667eea;
+  color: white;
+  border: none;
+  border-radius: 8px;
+  font-size: 14px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s;
+  margin-top: 16px;
+}
+
+.submit-btn:hover {
+  background: #5568d3;
+  transform: translateY(-2px);
+  box-shadow: 0 6px 18px rgba(102, 126, 234, 0.3);
+}
+
+.submit-btn:active {
+  transform: translateY(0);
+}
+
+.form-error,
+.form-success {
+  padding: 12px 16px;
+  border-radius: 8px;
+  margin-bottom: 16px;
+  font-size: 14px;
+  font-weight: 500;
+  animation: slideIn 0.3s ease;
+}
+
+.form-error {
+  background-color: #fee;
+  color: #c33;
+  border: 1px solid #fcc;
+}
+
+.form-success {
+  background-color: #efe;
+  color: #3c3;
+  border: 1px solid #cfc;
+}
+
+@keyframes slideIn {
+  from {
+    opacity: 0;
+    transform: translateY(-10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+/* Responsive Design */
+@media (max-width: 768px) {
+  .contacts-container {
+    padding: 24px 16px;
+  }
+
+  .contacts-container h1 {
+    font-size: 36px;
+    margin-bottom: 12px;
+  }
+
+  .contacts-intro {
+    font-size: 14px;
+    margin-bottom: 32px;
+  }
+
+  .contacts-content {
+    grid-template-columns: 1fr;
+    gap: 24px;
+  }
+
+  .contact-info,
+  .contact-form {
+    padding: 24px;
+  }
+
+  .contact-info h2,
+  .contact-form h2 {
+    font-size: 20px;
+    margin-bottom: 16px;
+  }
+
+  .info-item {
+    margin-bottom: 16px;
+    padding-bottom: 16px;
+  }
+}
+
+@media (max-width: 480px) {
+  .contacts-container {
+    padding: 16px 12px;
+  }
+
+  .contacts-container h1 {
+    font-size: 28px;
+    margin-bottom: 8px;
+  }
+
+  .contacts-intro {
+    font-size: 13px;
+    margin-bottom: 24px;
+  }
+
+  .contact-info,
+  .contact-form {
+    padding: 16px;
+  }
+
+  .contact-info h2,
+  .contact-form h2 {
+    font-size: 18px;
+    margin-bottom: 16px;
+  }
+
+  .form-group input,
+  .form-group textarea {
+    padding: 10px;
+    font-size: 13px;
+  }
+
+  .submit-btn {
+    padding: 10px 16px;
+    font-size: 13px;
+  }
+}

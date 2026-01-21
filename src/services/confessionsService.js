@@ -5,6 +5,7 @@ import {
   getDoc,
   doc,
   query,
+  where,
   orderBy,
   limit,
   deleteDoc,
@@ -169,6 +170,53 @@ export async function flagConfession(confessionId) {
   }
 }
 
+/**
+ * Moderate a confession (mark as approved/rejected with reason)
+ * @param {string} confessionId - ID of the confession
+ * @param {boolean} approved - Whether to approve or reject
+ * @param {string} reason - Moderation reason
+ */
+export async function moderateConfession(confessionId, approved, reason = '') {
+  try {
+    const docRef = doc(db, CONFESSIONS_COLLECTION, confessionId);
+    await updateDoc(docRef, {
+      moderated: true,
+      approved,
+      reason,
+      moderatedAt: serverTimestamp(),
+      updatedAt: serverTimestamp(),
+    });
+  } catch (error) {
+    console.error('Error moderating confession:', error);
+    throw error;
+  }
+}
+
+/**
+ * Get all flagged confessions
+ */
+export async function getFlaggedConfessions() {
+  try {
+    const q = query(
+      collection(db, CONFESSIONS_COLLECTION),
+      where('flagCount', '>', 0),
+      orderBy('flagCount', 'desc'),
+      orderBy('createdAt', 'desc')
+    );
+
+    const querySnapshot = await getDocs(q);
+    return querySnapshot.docs.map((doc) => ({
+      id: doc.id,
+      ...doc.data(),
+      createdAt: doc.data().createdAt?.toDate?.() || new Date(),
+      updatedAt: doc.data().updatedAt?.toDate?.() || new Date(),
+    }));
+  } catch (error) {
+    console.error('Error fetching flagged confessions:', error);
+    throw error;
+  }
+}
+
 const confessionsService = {
   createConfession,
   getAllConfessions,
@@ -176,6 +224,8 @@ const confessionsService = {
   updateConfessionCommentCount,
   deleteConfession,
   flagConfession,
+  moderateConfession,
+  getFlaggedConfessions,
 };
 
 export default confessionsService;

@@ -118,14 +118,23 @@ service cloud.firestore {
                        request.resource.data.commentCount == 0 &&
                        request.resource.data.flagCount == 0;
       
-      // Update: Only for updating comment count and flag count
-      allow update: if request.resource.data.content == resource.data.content &&
-                       request.resource.data.createdAt == resource.data.createdAt &&
-                       request.resource.data.updatedAt != null &&
-                       ((request.resource.data.commentCount is number) ||
-                        (request.resource.data.flagCount is number));
+      // Update: Users can update comment count, flag count, and admins can update moderation status
+      allow update: if (request.resource.data.content == resource.data.content &&
+                        request.resource.data.createdAt == resource.data.createdAt &&
+                        request.resource.data.updatedAt != null &&
+                        ((request.resource.data.commentCount is number) ||
+                         (request.resource.data.flagCount is number))) ||
+                       (isAdmin() && 
+                        request.resource.data.content == resource.data.content &&
+                        request.resource.data.createdAt == resource.data.createdAt &&
+                        request.resource.data.commentCount == resource.data.commentCount &&
+                        request.resource.data.flagCount == resource.data.flagCount &&
+                        request.resource.data.updatedAt != null &&
+                        (request.resource.data.moderated is bool ||
+                         request.resource.data.reason is string ||
+                         request.resource.data.moderatedAt is timestamp));
       
-      // Delete: Only admins can delete
+      // Delete: Only admins can delete (moderation)
       allow delete: if isAdmin();
     }
 
@@ -148,14 +157,25 @@ service cloud.firestore {
                        (request.resource.data.parentCommentId == null ||
                         request.resource.data.parentCommentId is string);
       
-      // Update: Only for updating reply count
-      allow update: if request.resource.data.content == resource.data.content &&
-                       request.resource.data.confessionId == resource.data.confessionId &&
-                       request.resource.data.parentCommentId == resource.data.parentCommentId &&
-                       request.resource.data.createdAt == resource.data.createdAt &&
-                       request.resource.data.updatedAt != null &&
-                       ((request.resource.data.replyCount is number) ||
-                        (request.resource.data.flagCount is number));
+      // Update: Users can update reply count, admins can also update moderation status
+      allow update: if (request.resource.data.content == resource.data.content &&
+                        request.resource.data.confessionId == resource.data.confessionId &&
+                        request.resource.data.parentCommentId == resource.data.parentCommentId &&
+                        request.resource.data.createdAt == resource.data.createdAt &&
+                        request.resource.data.updatedAt != null &&
+                        ((request.resource.data.replyCount is number) ||
+                         (request.resource.data.flagCount is number))) ||
+                       (isAdmin() && 
+                        request.resource.data.content == resource.data.content &&
+                        request.resource.data.confessionId == resource.data.confessionId &&
+                        request.resource.data.parentCommentId == resource.data.parentCommentId &&
+                        request.resource.data.createdAt == resource.data.createdAt &&
+                        request.resource.data.replyCount == resource.data.replyCount &&
+                        request.resource.data.flagCount == resource.data.flagCount &&
+                        request.resource.data.updatedAt != null &&
+                        (request.resource.data.moderated is bool ||
+                         request.resource.data.reason is string ||
+                         request.resource.data.moderatedAt is timestamp));
       
       // Delete: Only admins can delete (moderation)
       allow delete: if isAdmin();

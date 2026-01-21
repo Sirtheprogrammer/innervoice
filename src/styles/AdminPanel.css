@@ -1,20 +1,23 @@
 /* Admin Panel Styles */
 :root {
-  --admin-bg: #f5f5f5;
-  --admin-sidebar-bg: #000000;
-  --admin-header-bg: #C1121F;
+  --admin-bg: linear-gradient(135deg, #f0f9ff 0%, #e0f2fe 50%, #bae6fd 100%);
+  --admin-sidebar-bg: var(--primary);
+  --admin-header-bg: linear-gradient(90deg, var(--primary) 0%, var(--secondary) 100%);
+  --admin-text: var(--white);
+  --admin-card-bg: var(--white);
+  --admin-border: #e5e7eb;
 }
 
 .admin-panel {
   min-height: 100vh;
-  background: var(--admin-bg);
+  background: transparent;
 }
 
 .admin-header {
   background: var(--admin-header-bg);
-  color: white;
+  color: var(--admin-text);
   padding: 16px 0;
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+  box-shadow: 0 2px 10px rgba(79, 70, 229, 0.3);
   position: sticky;
   top: 0;
   z-index: 100;
@@ -70,8 +73,6 @@
 
 .admin-content {
   display: flex;
-  max-width: 1400px;
-  margin: 0 auto;
   min-height: calc(100vh - 60px);
 }
 
@@ -79,9 +80,17 @@
   width: 220px;
   background: var(--admin-sidebar-bg);
   padding: 16px 0;
-  position: sticky;
+  position: fixed;
+  left: 0;
   top: 60px;
   height: calc(100vh - 60px);
+  overflow-y: auto;
+}
+
+.admin-main {
+  flex: 1;
+  padding: 32px;
+  margin-left: 220px;
 }
 
 .admin-sidebar ul {
@@ -94,18 +103,154 @@
   margin: 0;
 }
 
-.admin-sidebar a {
+.admin-sidebar button {
   display: block;
-  color: white;
-  text-decoration: none;
+  width: 100%;
+  color: var(--admin-text);
+  background: none;
+  border: none;
+  text-align: left;
   padding: 12px 16px;
   font-size: 14px;
   font-weight: 600;
+  cursor: pointer;
   transition: background 200ms ease;
 }
 
-.admin-sidebar a:hover {
-  background: rgba(193, 18, 31, 0.3);
+.admin-sidebar button:hover {
+  background: rgba(255, 255, 255, 0.1);
+}
+
+.admin-sidebar button.active {
+  background: rgba(255, 255, 255, 0.2);
+}
+
+.back-btn {
+  background: none;
+  border: 1px solid rgba(255, 255, 255, 0.3);
+  color: var(--admin-text);
+  padding: 8px 12px;
+  border-radius: 4px;
+  font-size: 12px;
+  cursor: pointer;
+  transition: background 200ms ease;
+}
+
+.back-btn:hover {
+  background: rgba(255, 255, 255, 0.1);
+}
+
+/* Icon styling */
+.admin-sidebar button svg,
+.logout-btn svg,
+.action-btn svg {
+  width: 18px;
+  height: 18px;
+  margin-right: 8px;
+}
+
+.confession-stats svg {
+  width: 16px;
+  height: 16px;
+  margin-right: 4px;
+}
+
+/* Mobile Responsiveness */
+@media (max-width: 767px) {
+  .admin-content {
+    flex-direction: column;
+  }
+
+  .admin-sidebar {
+    width: 250px;
+    height: 100vh;
+    position: fixed;
+    left: -250px;
+    top: 60px;
+    background: var(--admin-sidebar-bg);
+    transition: left 0.3s ease;
+    z-index: 1000;
+    padding: 16px 0;
+    box-shadow: 2px 0 5px rgba(0,0,0,0.3);
+    display: none;
+  }
+
+  .admin-sidebar.open {
+    left: 0;
+    display: block;
+  }
+
+  .admin-sidebar ul {
+    flex-direction: column;
+    gap: 0;
+  }
+
+  .admin-sidebar li {
+    margin: 0;
+  }
+
+  .admin-sidebar button {
+    padding: 12px 16px;
+    font-size: 14px;
+    width: 100%;
+    text-align: left;
+  }
+
+  .admin-main {
+    padding: 16px;
+    margin-left: 0;
+  }
+
+  .admin-section {
+    padding: 16px;
+  }
+
+  .admin-section-content {
+    grid-template-columns: 1fr;
+    gap: 16px;
+  }
+
+  .admin-header-content {
+    position: relative;
+    flex-direction: row;
+    justify-content: space-between;
+    align-items: center;
+  }
+
+  .menu-toggle {
+    display: block;
+    background: none;
+    border: none;
+    color: var(--admin-text);
+    font-size: 24px;
+    cursor: pointer;
+    padding: 8px;
+  }
+
+  .admin-header h1 {
+    font-size: 18px;
+    flex: 1;
+    text-align: center;
+  }
+
+  .admin-user-info {
+    display: none; /* Hide on mobile, logout via sidebar if needed */
+  }
+
+  .sidebar-overlay {
+    display: none;
+    position: fixed;
+    top: 60px;
+    left: 0;
+    width: 100%;
+    height: calc(100vh - 60px);
+    background: rgba(0, 0, 0, 0.5);
+    z-index: 999;
+  }
+
+  .sidebar-overlay.visible {
+    display: block;
+  }
 }
 
 .admin-main {
@@ -256,5 +401,270 @@
     min-height: auto;
     width: 100%;
     box-sizing: border-box;
+  }
+}
+
+/* Confessions Management Styles */
+.section-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 24px;
+}
+
+.section-header h2 {
+  margin: 0;
+  font-size: 24px;
+  color: #111827;
+}
+
+.refresh-btn {
+  padding: 8px 16px;
+  background: #667eea;
+  color: white;
+  border: none;
+  border-radius: 6px;
+  font-size: 13px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.refresh-btn:hover {
+  background: #5568d3;
+  transform: rotate(180deg);
+}
+
+.admin-error,
+.admin-success {
+  padding: 12px 16px;
+  border-radius: 8px;
+  margin-bottom: 16px;
+  font-size: 14px;
+  font-weight: 500;
+}
+
+.admin-error {
+  background-color: #fee;
+  color: #c33;
+  border: 1px solid #fcc;
+}
+
+.admin-success {
+  background-color: #efe;
+  color: #3c3;
+  border: 1px solid #cfc;
+}
+
+.admin-loading,
+.admin-empty {
+  padding: 32px 16px;
+  text-align: center;
+  background: white;
+  border-radius: 8px;
+  border: 1px solid #e5e7eb;
+  color: #6b7280;
+  font-size: 14px;
+}
+
+.confessions-list {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.confession-card {
+  background: white;
+  border: 1px solid #e5e7eb;
+  border-radius: 8px;
+  overflow: hidden;
+  transition: all 0.2s;
+}
+
+.confession-card:hover {
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
+  border-color: #d1d5db;
+}
+
+.confession-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 16px;
+  background: #f9fafb;
+  border-bottom: 1px solid #e5e7eb;
+}
+
+.confession-info {
+  display: flex;
+  gap: 16px;
+  align-items: center;
+  flex-wrap: wrap;
+}
+
+.confession-id {
+  font-size: 12px;
+  color: #9ca3af;
+  font-weight: 500;
+  font-family: monospace;
+  background: #f3f4f6;
+  padding: 4px 8px;
+  border-radius: 4px;
+}
+
+.confession-date {
+  font-size: 12px;
+  color: #6b7280;
+}
+
+.confession-stats {
+  font-size: 13px;
+  color: #374151;
+  font-weight: 600;
+}
+
+.confession-actions {
+  display: flex;
+  gap: 8px;
+}
+
+.action-btn {
+  padding: 8px 12px;
+  background: transparent;
+  border: 1px solid #d1d5db;
+  border-radius: 6px;
+  cursor: pointer;
+  font-size: 16px;
+  transition: all 0.2s;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.action-btn:hover {
+  background: #f3f4f6;
+  border-color: #9ca3af;
+}
+
+.delete-btn:hover {
+  background: #fee;
+  border-color: #fcc;
+}
+
+.flag-btn:hover {
+  background: #fef3c7;
+  border-color: #fcd34d;
+}
+
+.expand-btn {
+  border: none;
+  background: transparent;
+  color: #667eea;
+  font-weight: bold;
+}
+
+.expand-btn:hover {
+  background: transparent;
+}
+
+.confession-content {
+  padding: 16px;
+  border-bottom: 1px solid #f0f0f0;
+}
+
+.confession-content p {
+  margin: 0;
+  color: #374151;
+  font-size: 14px;
+  line-height: 1.6;
+  word-wrap: break-word;
+  max-height: 200px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.confession-details {
+  padding: 16px;
+  background: #f9fafb;
+  border-top: 1px solid #e5e7eb;
+}
+
+.confession-details h4 {
+  margin: 0 0 12px 0;
+  font-size: 14px;
+  color: #111827;
+  font-weight: 600;
+}
+
+.no-comments {
+  font-size: 13px;
+  color: #9ca3af;
+  margin: 0;
+}
+
+.comments-list {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.comment-item {
+  background: white;
+  padding: 12px;
+  border-radius: 6px;
+  border: 1px solid #f0f0f0;
+}
+
+.comment-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 12px;
+  margin-bottom: 8px;
+  flex-wrap: wrap;
+}
+
+.comment-author {
+  font-weight: 600;
+  color: #111827;
+  font-size: 13px;
+}
+
+.comment-date {
+  font-size: 11px;
+  color: #9ca3af;
+}
+
+.comment-text {
+  font-size: 13px;
+  color: #374151;
+  margin: 0;
+  line-height: 1.5;
+  word-wrap: break-word;
+}
+
+@media (max-width: 768px) {
+  .admin-main {
+    padding: 16px;
+  }
+
+  .confession-header {
+    flex-direction: column;
+    align-items: flex-start;
+  }
+
+  .confession-actions {
+    width: 100%;
+    justify-content: flex-end;
+  }
+
+  .section-header {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 12px;
+  }
+
+  .refresh-btn {
+    width: 100%;
   }
 }

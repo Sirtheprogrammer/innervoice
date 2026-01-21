@@ -1,14 +1,17 @@
 import React, { useState } from 'react';
-import { useAuth } from '../context/AuthContext';
 import { useNavigate } from 'react-router-dom';
+import { useAuth } from '../context/AuthContext';
 import { MdHome, MdCampaign, MdRefresh, MdComment, MdLogout, MdMenu } from 'react-icons/md';
+import AnnouncementForm from '../components/admin/AnnouncementForm';
+import AnnouncementsList from '../components/admin/AnnouncementsList';
 import '../styles/AdminPanel.css';
 
-export default function AdminPanel() {
-  const { user, logout } = useAuth();
+export default function AdminAnnouncements() {
   const navigate = useNavigate();
+  const { user, logout } = useAuth();
   const [loading, setLoading] = useState(false);
   const [sidebarOpen, setSidebarOpen] = useState(false);
+  const [announcementRefreshTrigger, setAnnouncementRefreshTrigger] = useState(0);
 
   const handleLogout = async () => {
     setLoading(true);
@@ -19,6 +22,10 @@ export default function AdminPanel() {
       console.error('Logout failed:', err);
       setLoading(false);
     }
+  };
+
+  const handleAnnouncementCreated = () => {
+    setAnnouncementRefreshTrigger((prev) => prev + 1);
   };
 
   return (
@@ -45,8 +52,8 @@ export default function AdminPanel() {
       <div className="admin-content">
         <nav className={`admin-sidebar ${sidebarOpen ? 'open' : ''}`}>
           <ul>
-            <li><button onClick={() => { navigate('/admin'); setSidebarOpen(false); }} className="active"><MdHome /> Dashboard</button></li>
-            <li><button onClick={() => { navigate('/admin/announcements'); setSidebarOpen(false); }}><MdCampaign /> Announcements</button></li>
+            <li><button onClick={() => { navigate('/admin'); setSidebarOpen(false); }}><MdHome /> Dashboard</button></li>
+            <li><button onClick={() => { navigate('/admin/announcements'); setSidebarOpen(false); }} className="active"><MdCampaign /> Announcements</button></li>
             <li><button onClick={() => { navigate('/admin/updates'); setSidebarOpen(false); }}><MdRefresh /> Updates</button></li>
             <li><button onClick={() => { navigate('/admin/confessions'); setSidebarOpen(false); }}><MdComment /> Confessions</button></li>
           </ul>
@@ -56,9 +63,15 @@ export default function AdminPanel() {
 
         <main className="admin-main">
           <section className="admin-section">
-            <h2>Dashboard</h2>
+            <h2>Manage Announcements</h2>
             <div className="admin-section-content">
-              <p>Welcome to the InnerVoice Admin Panel. Select a section from the sidebar to manage content.</p>
+              <div className="form-container">
+                <h3>Create New Announcement</h3>
+                <AnnouncementForm onSuccess={handleAnnouncementCreated} />
+              </div>
+              <div className="list-container">
+                <AnnouncementsList refreshTrigger={announcementRefreshTrigger} />
+              </div>
             </div>
           </section>
         </main>
