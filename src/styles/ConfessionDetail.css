@@ -326,10 +326,88 @@
   color: #ef4444;
 }
 
+/* Like button states */
+.like-btn[disabled],
+.like-btn:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+/* Share tooltip / toast */
+.share-tooltip {
+  position: absolute;
+  right: 8px;
+  top: 46px;
+  background: rgba(17, 24, 39, 0.95);
+  color: #fff;
+  padding: 8px 10px;
+  border-radius: 6px;
+  font-size: 13px;
+  box-shadow: 0 8px 20px rgba(0,0,0,0.18);
+  z-index: 1300;
+}
+
+/* Positioning container for header actions to anchor tooltip */
+.confession-detail-header > div:nth-child(2) { position: relative; }
+
 /* Add subtle decorative blobs behind the detail card */
 .confession-detail {
   position: relative;
 }
+
+/* Share modal */
+.share-modal {
+  position: fixed;
+  left: 0;
+  right: 0;
+  top: 0;
+  bottom: 0;
+  background: rgba(0,0,0,0.45);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 2000;
+}
+.share-modal-inner {
+  width: 92%;
+  max-width: 420px;
+  background: #fff;
+  border-radius: 10px;
+  padding: 12px;
+  box-shadow: 0 8px 30px rgba(0,0,0,0.2);
+}
+.share-modal-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 8px;
+}
+.share-modal-close {
+  background: transparent;
+  border: none;
+  font-size: 18px;
+  line-height: 1;
+  cursor: pointer;
+}
+.share-options {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 8px;
+}
+.share-option {
+  background: #f5f5f5;
+  border: 1px solid #e5e5e5;
+  padding: 10px 8px;
+  border-radius: 8px;
+  cursor: pointer;
+  text-align: center;
+  font-weight: 600;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+}
+.share-option:active { transform: scale(0.995); }
 
 .confession-detail::before,
 .confession-detail::after {

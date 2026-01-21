@@ -237,6 +237,12 @@
   overflow: hidden;
   min-height: 180px;
 }
+.confession-title {
+  margin: 12px 16px 0 16px;
+  font-size: 18px;
+  font-weight: 700;
+  color: #111;
+}
 
 .confession-card:hover {
   transform: translateY(-6px);
@@ -285,6 +291,14 @@
 .confession-card:hover .read-more {
   gap: 2px;
   transform: translateX(4px);
+}
+
+.comment-count {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-weight: 600;
+  color: #06b6d4;
 }
 
 /* Loading State */

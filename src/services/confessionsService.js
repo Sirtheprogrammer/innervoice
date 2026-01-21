@@ -10,6 +10,7 @@ import {
   limit,
   deleteDoc,
   updateDoc,
+  increment,
   serverTimestamp,
 } from 'firebase/firestore';
 import { db } from '../firebase/config';
@@ -32,18 +33,29 @@ function validateConfessionData(confession) {
     throw new Error('Content cannot exceed 5000 characters');
   }
 
+  // Title is optional but if provided must be a string and limited length
+  if (confession.title != null) {
+    if (typeof confession.title !== 'string') {
+      throw new Error('Title must be a string');
+    }
+    if (confession.title.length > 150) {
+      throw new Error('Title cannot exceed 150 characters');
+    }
+  }
+
   return true;
 }
 
 /**
  * Create a new confession (anonymous)
  */
-export async function createConfession(content) {
+export async function createConfession(content, title = null) {
   try {
-    validateConfessionData({ content });
+    validateConfessionData({ content, title });
 
     const docRef = await addDoc(collection(db, CONFESSIONS_COLLECTION), {
       content: content.trim(),
+      title: title != null ? String(title).trim() : null,
       createdAt: serverTimestamp(),
       updatedAt: serverTimestamp(),
       commentCount: 0,
@@ -53,6 +65,7 @@ export async function createConfession(content) {
     return {
       id: docRef.id,
       content: content.trim(),
+      title: title != null ? String(title).trim() : null,
       createdAt: new Date(),
       commentCount: 0,
       flagCount: 0,
@@ -130,6 +143,28 @@ export async function updateConfessionCommentCount(confessionId, increment = 1) 
     });
   } catch (error) {
     console.error('Error updating comment count:', error);
+    throw error;
+  }
+}
+
+/**
+ * Increment like count for a confession
+ */
+export async function likeConfession(confessionId) {
+  try {
+    const docRef = doc(db, CONFESSIONS_COLLECTION, confessionId);
+    const confession = await getDoc(docRef);
+
+    if (!confession.exists()) {
+      throw new Error('Confession not found');
+    }
+
+    await updateDoc(docRef, {
+      likeCount: increment(1),
+      updatedAt: serverTimestamp(),
+    });
+  } catch (error) {
+    console.error('Error liking confession:', error);
     throw error;
   }
 }

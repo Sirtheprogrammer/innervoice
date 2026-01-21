@@ -7,10 +7,14 @@ service cloud.firestore {
     }
 
     // Helper function to check if user is admin
-    // In production, check custom claims: request.auth.token.admin == true
-    // For now, check if user exists and has created an account
+    // Prefer custom claims: `request.auth.token.admin == true` when available.
+    // Fallback: check `users/{uid}.role == 'admin'` document in Firestore.
     function isAdmin() {
-      return isAuthenticated() && exists(/databases/$(database)/documents/admins/$(request.auth.uid));
+      return isAuthenticated() && (
+        (request.auth.token.admin == true) ||
+        (exists(/databases/$(database)/documents/users/$(request.auth.uid)) &&
+         get(/databases/$(database)/documents/users/$(request.auth.uid)).data.role == 'admin')
+      );
     }
 
     // Announcements Collection Rules
@@ -123,7 +127,8 @@ service cloud.firestore {
                         request.resource.data.createdAt == resource.data.createdAt &&
                         request.resource.data.updatedAt != null &&
                         ((request.resource.data.commentCount is number) ||
-                         (request.resource.data.flagCount is number))) ||
+                         (request.resource.data.flagCount is number) ||
+                         (request.resource.data.likeCount is number))) ||
                        (isAdmin() && 
                         request.resource.data.content == resource.data.content &&
                         request.resource.data.createdAt == resource.data.createdAt &&
@@ -194,6 +199,26 @@ service cloud.firestore {
       
       // Delete: Deny deletion (admins should be managed by super-admin)
       allow delete: if false;
+    }
+
+    // Users Collection (profiles and roles)
+    match /users/{userId} {
+      // Read: user can read their own profile, admins can read any
+      allow read: if request.auth != null && (request.auth.uid == userId || isAdmin());
+
+      // Create: only the authenticated user may create their own profile
+      // and clients MUST set role to 'user' (admins must be granted server-side)
+      allow create: if request.auth != null && request.auth.uid == userId
+                    && request.resource.data.role == 'user'
+                    && request.resource.data.email is string
+                    && request.resource.data.createdAt != null;
+
+      // Update: user can update their profile but cannot change `role`
+      allow update: if request.auth != null && request.auth.uid == userId
+                    && request.resource.data.role == resource.data.role;
+
+      // Delete: only admins may delete user docs (managed by super-admin)
+      allow delete: if isAdmin();
     }
   }
 }

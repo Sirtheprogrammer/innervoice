@@ -5,6 +5,7 @@ import './index.css';
 import App from './App';
 import { AuthProvider } from './context/AuthContext';
 import AdminLogin from './pages/AdminLogin';
+import Register from './pages/Register';
 import AdminPanel from './pages/AdminPanel';
 import AdminAnnouncements from './pages/AdminAnnouncements';
 import AdminUpdates from './pages/AdminUpdates';
@@ -12,6 +13,7 @@ import AdminConfessions from './pages/AdminConfessions';
 import ConfessionDetail from './pages/ConfessionDetail';
 import Contacts from './pages/Contacts';
 import About from './pages/About';
+import Profile from './pages/Profile';
 import ProtectedRoute from './components/ProtectedRoute';
 import reportWebVitals from './reportWebVitals';
 
@@ -26,7 +28,9 @@ root.render(
           <Route path="/confession/:confessionId" element={<ConfessionDetail />} />
           <Route path="/contacts" element={<Contacts />} />
           <Route path="/about" element={<About />} />
-          <Route path="/admin/login" element={<AdminLogin />} />
+          <Route path="/login" element={<AdminLogin />} />
+          <Route path="/profile" element={<Profile />} />
+          <Route path="/register" element={<Register />} />
 
           {/* Protected admin routes */}
           <Route

@@ -1,5 +1,12 @@
 import React, { useEffect, useState } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
+import { MdComment } from 'react-icons/md';
+import { MdThumbUp, MdShare } from 'react-icons/md';
+import { FaWhatsapp, FaTelegramPlane, FaFacebook, FaTwitter } from 'react-icons/fa';
+import { MdEmail } from 'react-icons/md';
+import { FiCopy, FiMessageSquare } from 'react-icons/fi';
+import { likeConfession } from '../services/confessionsService';
+import { useAuth } from '../context/AuthContext';
 import { getConfessionById } from '../services/confessionsService';
 import {
   getCommentsByConfessionId,
@@ -23,11 +30,27 @@ export default function ConfessionDetail() {
   const [replyContent, setReplyContent] = useState('');
   const [expandedReplies, setExpandedReplies] = useState({});
   const [replies, setReplies] = useState({});
+  const [isLiking, setIsLiking] = useState(false);
+  const [liked, setLiked] = useState(false);
+  const [shareMessage, setShareMessage] = useState('');
+  const { user } = useAuth();
+  const [shareModalOpen, setShareModalOpen] = useState(false);
 
   useEffect(() => {
     fetchConfessionAndComments();
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [confessionId]);
+
+  useEffect(() => {
+    // initialize like state from localStorage to prevent double-like in UI
+    try {
+      const key = user ? `liked_confessions_${user.uid}` : 'liked_confessions';
+      const stored = JSON.parse(localStorage.getItem(key) || '[]');
+      setLiked(stored.includes(confessionId));
+    } catch {
+      setLiked(false);
+    }
+  }, [confessionId, user]);
 
   const fetchConfessionAndComments = async () => {
     setLoading(true);
@@ -201,12 +224,95 @@ export default function ConfessionDetail() {
 
       <div className="confession-detail">
         <div className="confession-detail-header">
-          <span className="timestamp">{formatDate(confession.createdAt)}</span>
+          <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
+            <div>
+              {confession.title && <h2 className="confession-detail-title">{confession.title}</h2>}
+              <span className="timestamp">{formatDate(confession.createdAt)}</span>
+            </div>
+
+            <div style={{ marginLeft: '12px', display: 'flex', gap: 8, alignItems: 'center' }}>
+              <button
+                className="action-btn like-btn"
+                onClick={async (e) => {
+                  e.stopPropagation();
+                  if (isLiking) return;
+                  if (!user) {
+                    // require login to like
+                    window.location.href = '/login';
+                    return;
+                  }
+                  try {
+                    if (liked) return;
+                    setIsLiking(true);
+                    await likeConfession(confessionId);
+                    // update local state
+                    setConfession((prev) => ({ ...prev, likeCount: (prev.likeCount || 0) + 1 }));
+                    const key = `liked_confessions_${user.uid}`;
+                    const stored = JSON.parse(localStorage.getItem(key) || '[]');
+                    stored.push(confessionId);
+                    localStorage.setItem(key, JSON.stringify(stored));
+                    setLiked(true);
+                  } catch (err) {
+                    console.error('Like failed', err);
+                  } finally {
+                    setIsLiking(false);
+                  }
+                }}
+                title={liked ? 'You liked this' : 'Like'}
+              >
+                <MdThumbUp /> {confession.likeCount || 0}
+              </button>
+
+              <button
+                className="action-btn share-btn"
+                onClick={async (e) => {
+                  e.stopPropagation();
+                  const url = `${window.location.origin}/confession/${confessionId}`;
+                  const shareText = (confession.title ? `${confession.title} - ` : '') + (confession.content ? (confession.content.substring(0, 200) + (confession.content.length > 200 ? '...' : '')) : '');
+                  try {
+                    if (navigator.share) {
+                      await navigator.share({ title: confession.title || 'Confession', text: shareText, url });
+                    } else {
+                      // open modal with multiple platform options
+                      setShareModalOpen(true);
+                    }
+                  } catch (err) {
+                    console.error('Share failed', err);
+                    setShareMessage('Unable to share');
+                    setTimeout(() => setShareMessage(''), 2500);
+                  }
+                }}
+                title="Share"
+              >
+                <MdShare />
+              </button>
+              {shareMessage && <div className="share-tooltip">{shareMessage}</div>}
+              {shareModalOpen && (
+                <div className="share-modal" onClick={(e) => { e.stopPropagation(); }}>
+                  <div className="share-modal-inner">
+                    <div className="share-modal-header">
+                      <strong>Share confession</strong>
+                      <button className="share-modal-close" onClick={() => setShareModalOpen(false)}>✕</button>
+                    </div>
+                    <div className="share-options">
+                      <button className="share-option" onClick={async (ev) => { ev.stopPropagation(); const link = `${window.location.origin}/confession/${confessionId}`; try { await navigator.clipboard.writeText(link); setShareMessage('Link copied to clipboard'); setTimeout(() => setShareMessage(''), 2500); } catch { setShareMessage('Copy failed'); setTimeout(() => setShareMessage(''), 2500); } setShareModalOpen(false); }}><FiCopy /> Copy link</button>
+                      <button className="share-option" onClick={(ev) => { ev.stopPropagation(); const text = encodeURIComponent(`${confession.title ? confession.title + ' - ' : ''}${confession.content || ''}`); const wa = `https://api.whatsapp.com/send?text=${text}%20${encodeURIComponent(window.location.origin + '/confession/' + confessionId)}`; window.open(wa, '_blank'); setShareModalOpen(false); }}><FaWhatsapp /> WhatsApp</button>
+                      <button className="share-option" onClick={(ev) => { ev.stopPropagation(); const url = encodeURIComponent(window.location.origin + '/confession/' + confessionId); const text = encodeURIComponent(confession.title ? confession.title + '\n' + (confession.content || '') : (confession.content || '')); const tg = `https://t.me/share/url?url=${url}&text=${text}`; window.open(tg, '_blank'); setShareModalOpen(false); }}><FaTelegramPlane /> Telegram</button>
+                      <button className="share-option" onClick={(ev) => { ev.stopPropagation(); const fb = `https://www.facebook.com/sharer/sharer.php?u=${encodeURIComponent(window.location.origin + '/confession/' + confessionId)}`; window.open(fb, '_blank'); setShareModalOpen(false); }}><FaFacebook /> Facebook</button>
+                      <button className="share-option" onClick={(ev) => { ev.stopPropagation(); const tw = `https://twitter.com/intent/tweet?text=${encodeURIComponent((confession.title ? confession.title + ' - ' : '') + window.location.origin + '/confession/' + confessionId)}`; window.open(tw, '_blank'); setShareModalOpen(false); }}><FaTwitter /> Twitter</button>
+                      <button className="share-option" onClick={(ev) => { ev.stopPropagation(); const mailto = `mailto:?subject=${encodeURIComponent(confession.title || 'Confession')}&body=${encodeURIComponent((confession.title ? confession.title + '\n\n' : '') + (confession.content || '') + '\n\n' + window.location.origin + '/confession/' + confessionId)}`; window.location.href = mailto; setShareModalOpen(false); }}><MdEmail /> Email</button>
+                      <button className="share-option" onClick={(ev) => { ev.stopPropagation(); const sms = `sms:?body=${encodeURIComponent((confession.title ? confession.title + ' - ' : '') + window.location.origin + '/confession/' + confessionId)}`; window.location.href = sms; setShareModalOpen(false); }}><FiMessageSquare /> SMS</button>
+                    </div>
+                  </div>
+                </div>
+              )}
+            </div>
+          </div>
         </div>
         <p className="confession-detail-content">{confession.content}</p>
         <div className="confession-detail-footer">
           <span className="comment-count">
-            💬 {confession.commentCount || 0} comments
+            <MdComment /> {confession.commentCount || 0} comments
           </span>
         </div>
       </div>

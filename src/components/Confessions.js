@@ -1,5 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
+import { MdComment } from 'react-icons/md';
 import { getAllConfessions, createConfession } from '../services/confessionsService';
 import '../styles/Confessions.css';
 
@@ -13,6 +14,7 @@ export default function Confessions() {
   const [isCreating, setIsCreating] = useState(false);
   const [showForm, setShowForm] = useState(false);
   const [formContent, setFormContent] = useState('');
+  const [formTitle, setFormTitle] = useState('');
 
   // Fetch confessions on mount
   useEffect(() => {
@@ -50,8 +52,9 @@ export default function Confessions() {
 
     setIsCreating(true);
     try {
-      await createConfession(formContent);
+      await createConfession(formContent, formTitle || null);
       setFormContent('');
+      setFormTitle('');
       setFormSuccess('Your confession has been posted!');
       setShowForm(false);
       
@@ -126,6 +129,15 @@ export default function Confessions() {
             {formSuccess && <div className="form-success">{formSuccess}</div>}
             <form onSubmit={handleCreateConfession}>
               <div className="form-group">
+                <input
+                  value={formTitle}
+                  onChange={(e) => setFormTitle(e.target.value)}
+                  placeholder="Optional title (max 150 characters)"
+                  maxLength={150}
+                  disabled={isCreating}
+                />
+              </div>
+              <div className="form-group">
                 <textarea
                   value={formContent}
                   onChange={(e) => setFormContent(e.target.value)}
@@ -185,13 +197,14 @@ export default function Confessions() {
                   {formatDate(confession.createdAt)}
                 </span>
               </div>
+              {confession.title ? <h3 className="confession-title">{confession.title}</h3> : null}
               <p className="confession-content">
                 {truncateText(confession.content, 300)}
               </p>
               <div className="confession-footer">
                 <div className="confession-stats">
                   <span className="comment-count">
-                    💬 {confession.commentCount || 0} comments
+                    <MdComment /> {confession.commentCount || 0} comments
                   </span>
                 </div>
                 <span className="read-more">Read more →</span>

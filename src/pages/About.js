@@ -6,7 +6,7 @@ export default function About() {
     <div className="about-container">
       <div className="about-wrapper">
         <div className="about-hero">
-          <h1>About ChiefMedia</h1>
+          <h1>About InnerVoice</h1>
           <p className="hero-subtitle">
             A platform for authentic, anonymous voices and meaningful connections
           </p>
@@ -15,7 +15,7 @@ export default function About() {
         <section className="about-section">
           <h2>Our Mission</h2>
           <p>
-            ChiefMedia is dedicated to creating a safe, judgment-free space where people can share their thoughts,
+            InnerVoice is dedicated to creating a safe, judgment-free space where people can share their thoughts,
             confessions, and experiences anonymously. We believe that everyone deserves to be heard, and anonymity
             enables people to express themselves authentically without fear of judgment or social consequences.
           </p>
@@ -26,7 +26,7 @@ export default function About() {
           <p>
             Our platform allows users to post confessions and engage in meaningful conversations through comments and
             replies. Whether it's a personal struggle, a funny story, or something you've always wanted to say but couldn't—
-            ChiefMedia is the place to share it all, completely anonymously.
+            InnerVoice is the place to share it all, completely anonymously.
           </p>
         </section>
 
@@ -77,7 +77,7 @@ export default function About() {
         <section className="about-section">
           <h2>Get Involved</h2>
           <p>
-            Want to help build ChiefMedia? We're always looking for passionate people to join our team. Whether you're
+            Want to help build InnerVoice? We're always looking for passionate people to join our team. Whether you're
             interested in development, moderation, or community building, <a href="/contacts">reach out to us</a> to
             learn more about opportunities.
           </p>
@@ -86,7 +86,7 @@ export default function About() {
         <section className="about-section">
           <h2>Contact & Support</h2>
           <p>
-            Have questions or feedback? <a href="/contacts">Contact us anytime</a>. We're here to help make ChiefMedia
+            Have questions or feedback? <a href="/contacts">Contact us anytime</a>. We're here to help make InnerVoice
             the best platform it can be.
           </p>
         </section>

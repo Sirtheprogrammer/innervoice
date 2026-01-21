@@ -63,7 +63,7 @@ export default function Contacts() {
             <h2>Get In Touch</h2>
             <div className="info-item">
               <h3>Email</h3>
-              <p>support@chiefmedia.com</p>
+              <p>support@innervoice.com</p>
             </div>
             <div className="info-item">
               <h3>Phone</h3>

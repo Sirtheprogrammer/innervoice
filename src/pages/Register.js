@@ -4,20 +4,26 @@ import Header from '../components/Header';
 import { useAuth } from '../context/AuthContext';
 import '../styles/AdminLogin.css';
 
-export default function AdminLogin() {
+export default function Register() {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
+  const [confirmPassword, setConfirmPassword] = useState('');
   const [errorMsg, setErrorMsg] = useState('');
   const [isLoading, setIsLoading] = useState(false);
-  const { login, signInWithGoogle } = useAuth();
+  const { register, signInWithGoogle } = useAuth();
 
   const handleSubmit = async (e) => {
     e.preventDefault();
     setErrorMsg('');
-    setIsLoading(true);
 
+    if (password !== confirmPassword) {
+      setErrorMsg('Passwords do not match');
+      return;
+    }
+
+    setIsLoading(true);
     try {
-      const result = await login(email, password);
+      const result = await register(email, password);
       const role = result?.role;
       if (role === 'admin') {
         window.location.href = '/admin';
@@ -25,7 +31,7 @@ export default function AdminLogin() {
         window.location.href = '/';
       }
     } catch (err) {
-      setErrorMsg(err.message || 'Failed to login. Please try again.');
+      setErrorMsg(err.message || 'Failed to register. Please try again.');
     } finally {
       setIsLoading(false);
     }
@@ -56,7 +62,7 @@ export default function AdminLogin() {
         <div className="login-box">
         <div className="login-header">
           <h1>InnerVoice</h1>
-          <p>Sign In</p>
+          <p>Create an account</p>
         </div>
 
         <form onSubmit={handleSubmit} className="login-form">
@@ -67,7 +73,7 @@ export default function AdminLogin() {
               type="email"
               value={email}
               onChange={(e) => setEmail(e.target.value)}
-              placeholder="admin@example.com"
+              placeholder="you@example.com"
               required
               disabled={isLoading}
             />
@@ -86,11 +92,25 @@ export default function AdminLogin() {
             />
           </div>
 
+          <div className="form-group">
+            <label htmlFor="confirm">Confirm Password</label>
+            <input
+              id="confirm"
+              type="password"
+              value={confirmPassword}
+              onChange={(e) => setConfirmPassword(e.target.value)}
+              placeholder="Confirm password"
+              required
+              disabled={isLoading}
+            />
+          </div>
+
           {errorMsg && <div className="error-message">{errorMsg}</div>}
 
           <button type="submit" disabled={isLoading} className="login-btn">
-            {isLoading ? 'Logging in...' : 'Login'}
+            {isLoading ? 'Creating account...' : 'Register'}
           </button>
+
           <button
             type="button"
             onClick={handleGoogle}
