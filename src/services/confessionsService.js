@@ -10,7 +10,6 @@ import {
   deleteDoc,
   updateDoc,
   serverTimestamp,
-  Timestamp,
 } from 'firebase/firestore';
 import { db } from '../firebase/config';
 
@@ -170,7 +169,7 @@ export async function flagConfession(confessionId) {
   }
 }
 
-export default {
+const confessionsService = {
   createConfession,
   getAllConfessions,
   getConfessionById,
@@ -178,3 +177,5 @@ export default {
   deleteConfession,
   flagConfession,
 };
+
+export default confessionsService;

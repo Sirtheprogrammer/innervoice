@@ -50,7 +50,7 @@ export default function Confessions() {
 
     setIsCreating(true);
     try {
-      const newConfession = await createConfession(formContent);
+      await createConfession(formContent);
       setFormContent('');
       setFormSuccess('Your confession has been posted!');
       setShowForm(false);

@@ -153,10 +153,12 @@ export async function flagComment(commentId) {
   }
 }
 
-export default {
+const commentsService = {
   createComment,
   getCommentsByConfessionId,
   getRepliesByCommentId,
   deleteComment,
   flagComment,
 };
+
+export default commentsService;
