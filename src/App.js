@@ -2,8 +2,7 @@ import React from 'react';
 import './App.css';
 import Header from './components/Header';
 import SearchBar from './components/SearchBar';
-import AnnouncementsCarousel from './components/AnnouncementsCarousel';
-import Updates from './components/Updates';
+import Confessions from './components/Confessions';
 import Sidebar from './components/Sidebar';
 import Footer from './components/Footer';
 
@@ -18,10 +17,6 @@ function App() {
     <div className="site-root">
       <Header toggleSidebar={toggleSidebar} />
       <SearchBar />
-      {/* Carousel for mobile - appears below search bar */}
-      <aside className="announcements-sidebar mobile-carousel">
-        <AnnouncementsCarousel />
-      </aside>
       <div className="app-body">
         <Sidebar isOpen={sidebarOpen} />
         {/* mobile overlay: clicking closes the sidebar */}
@@ -31,12 +26,8 @@ function App() {
           aria-hidden={!sidebarOpen}
         />
         <main className="main-content" id="main">
-          <Updates />
+          <Confessions />
         </main>
-        {/* Carousel for desktop - appears on right side */}
-        <aside className="announcements-sidebar desktop-carousel">
-          <AnnouncementsCarousel />
-        </aside>
       </div>
 
       <Footer />

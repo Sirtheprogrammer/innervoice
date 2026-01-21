@@ -2,15 +2,12 @@ import React, { useState } from 'react';
 import { useAuth } from '../context/AuthContext';
 import AnnouncementForm from '../components/admin/AnnouncementForm';
 import AnnouncementsList from '../components/admin/AnnouncementsList';
-import UpdatesForm from '../components/admin/UpdatesForm';
-import UpdatesList from '../components/admin/UpdatesList';
 import '../styles/AdminPanel.css';
 
 export default function AdminPanel() {
   const { user, logout } = useAuth();
   const [loading, setLoading] = useState(false);
   const [announcementRefreshTrigger, setAnnouncementRefreshTrigger] = useState(0);
-  const [updatesRefreshTrigger, setUpdatesRefreshTrigger] = useState(0);
 
   const handleLogout = async () => {
     setLoading(true);
@@ -25,10 +22,6 @@ export default function AdminPanel() {
 
   const handleAnnouncementCreated = () => {
     setAnnouncementRefreshTrigger((prev) => prev + 1);
-  };
-
-  const handleUpdateCreated = () => {
-    setUpdatesRefreshTrigger((prev) => prev + 1);
   };
 
   return (
@@ -53,7 +46,7 @@ export default function AdminPanel() {
         <nav className="admin-sidebar">
           <ul>
             <li><a href="#announcements">Announcements</a></li>
-            <li><a href="#updates">Updates</a></li>
+            <li><a href="#confessions">Confessions</a></li>
             <li><a href="#users">Users</a></li>
             <li><a href="#settings">Settings</a></li>
           </ul>
@@ -73,16 +66,10 @@ export default function AdminPanel() {
             </div>
           </section>
 
-          <section id="updates" className="admin-section">
-            <h2>Updates</h2>
+          <section id="confessions" className="admin-section">
+            <h2>Confessions Moderation</h2>
             <div className="admin-section-content">
-              <div className="form-container">
-                <h3>Publish New Update</h3>
-                <UpdatesForm onSuccess={handleUpdateCreated} />
-              </div>
-              <div className="list-container">
-                <UpdatesList refreshTrigger={updatesRefreshTrigger} />
-              </div>
+              <p>Manage confessions and comments will be implemented here</p>
             </div>
           </section>
 

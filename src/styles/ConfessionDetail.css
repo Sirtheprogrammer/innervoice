@@ -1,0 +1,836 @@
+/* Confession Detail Container */
+.confession-detail-container {
+  max-width: 900px;
+  margin: 0 auto;
+  padding: 16px;
+  min-height: calc(100vh - 200px);
+  background: transparent;
+}
+
+/* Back Button */
+.back-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 10px 16px;
+  background: white;
+  border: 1px solid #ddd;
+  border-radius: 6px;
+  font-size: 14px;
+  font-weight: 600;
+  color: #333;
+  cursor: pointer;
+  transition: all 0.2s;
+  margin-bottom: 24px;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
+}
+
+.back-btn:hover {
+  background: #f5f5f5;
+  border-color: #999;
+  transform: translateX(-4px);
+}
+
+/* Main Content Wrapper */
+.confession-content-wrapper {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 24px;
+}
+
+/* Confession Detail - Picture-like Card */
+.confession-detail {
+  background: white;
+  border-radius: 12px;
+  padding: 0;
+  overflow: hidden;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+  border: 1px solid #e5e7eb;
+  animation: slideIn 0.3s ease;
+  min-height: 300px;
+  display: flex;
+  flex-direction: column;
+}
+
+.confession-detail-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 12px 16px;
+  background: transparent;
+  color: inherit;
+  border-bottom: 1px solid rgba(15, 23, 42, 0.04);
+}
+
+.confession-detail-header .timestamp {
+  display: inline-block;
+  font-size: 12px;
+  color: #374151;
+  background: rgba(15, 23, 42, 0.06);
+  padding: 6px 10px;
+  border-radius: 999px;
+  font-weight: 600;
+}
+
+.confession-detail-content {
+  flex: 1;
+  font-size: 16px;
+  line-height: 1.8;
+  color: #333;
+  padding: 32px 24px;
+  word-wrap: break-word;
+  white-space: pre-wrap;
+  overflow-y: auto;
+  max-height: 400px;
+  background: white;
+}
+
+.confession-detail-footer {
+  display: flex;
+  gap: 16px;
+  padding: 16px 24px;
+  border-top: 1px solid #f0f0f0;
+  background: #f9f9f9;
+  font-size: 14px;
+  color: #666;
+}
+
+.confession-detail-footer .comment-count {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-weight: 600;
+  color: #06b6d4;
+}
+
+/* Comment Form Section */
+.comment-form-section {
+  background: white;
+  border-radius: 12px;
+  padding: 24px;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+  border: 1px solid #e5e7eb;
+  animation: slideIn 0.4s ease;
+}
+
+.comment-form-section h3 {
+  margin-top: 0;
+  margin-bottom: 16px;
+  font-size: 16px;
+  color: #333;
+  font-weight: 600;
+}
+
+.comment-form {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.comment-form textarea {
+  width: 100%;
+  padding: 12px;
+  border: 1px solid #ddd;
+  border-radius: 8px;
+  font-size: 14px;
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', 'Oxygen',
+    'Ubuntu', 'Cantarell', 'Fira Sans', 'Droid Sans', 'Helvetica Neue',
+    sans-serif;
+  resize: vertical;
+  transition: all 0.2s;
+}
+
+.comment-form textarea:focus {
+  outline: none;
+  border-color: #667eea;
+  box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
+}
+
+.comment-form textarea:disabled {
+  background-color: #f5f5f5;
+  cursor: not-allowed;
+}
+
+.form-footer {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 12px;
+}
+
+.form-footer .char-count {
+  font-size: 12px;
+  color: #999;
+}
+
+.form-footer .submit-btn {
+  padding: 10px 20px;
+  background: #10b981; /* solid green */
+  color: white;
+  border: none;
+  border-radius: 6px;
+  font-size: 14px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: transform 0.12s ease, box-shadow 0.12s ease;
+}
+
+.form-footer .submit-btn:hover:not(:disabled) {
+  transform: translateY(-2px);
+  box-shadow: 0 6px 18px rgba(16, 185, 129, 0.12);
+}
+
+.form-footer .submit-btn:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+/* Comments Section */
+.comments-section {
+  background: white;
+  border-radius: 12px;
+  padding: 24px;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+  border: 1px solid #e5e7eb;
+  animation: slideIn 0.5s ease;
+}
+
+.comments-section h3 {
+  margin-top: 0;
+  margin-bottom: 20px;
+  font-size: 16px;
+  color: #333;
+  font-weight: 600;
+}
+
+.comments-list {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+/* Comment Thread */
+.comment-thread {
+  padding-left: 0;
+  animation: slideIn 0.3s ease;
+}
+
+/* Comment */
+/* Instagram-like compact comment */
+.comment {
+  display: flex;
+  gap: 12px;
+  align-items: flex-start;
+  padding: 8px 4px;
+  background: transparent;
+  border: none;
+}
+
+
+.avatar {
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+  flex: 0 0 40px;
+  object-fit: cover;
+  background: #e6eef7;
+  display: block;
+}
+
+.comment-body {
+  flex: 1 1 auto;
+  min-width: 0;
+}
+
+.comment-author {
+  font-weight: 700;
+  color: #111827;
+  font-size: 14px;
+}
+
+.comment-text {
+  color: #374151;
+  font-size: 14px;
+  line-height: 1.5;
+  margin-top: 4px;
+  word-wrap: break-word;
+  overflow-wrap: break-word;
+}
+
+.comment-top {
+  display: flex;
+  gap: 8px;
+  align-items: center;
+  flex-wrap: wrap;
+}
+
+.comment-top .timestamp {
+  font-size: 12px;
+  color: #9ca3af;
+  font-weight: 400;
+  margin-left: auto;
+}
+
+.comment-meta {
+  display: flex;
+  gap: 8px;
+  align-items: center;
+  font-size: 12px;
+  color: #6b7280;
+  margin-top: 6px;
+}
+
+.delete-btn {
+  background: none;
+  border: none;
+  color: #9ca3af;
+  font-size: 14px;
+  cursor: pointer;
+  padding: 4px 8px;
+}
+
+.delete-btn:hover {
+  color: #ef4444;
+}
+
+.comment-content {
+  font-size: 14px;
+  line-height: 1.6;
+  color: #333;
+  margin: 12px 0;
+  word-wrap: break-word;
+}
+
+.comment-actions {
+  display: flex;
+  gap: 12px;
+  margin-top: 8px;
+}
+
+.action-btn {
+  background: transparent;
+  border: none;
+  color: #3b82f6;
+  font-weight: 600;
+  font-size: 13px;
+  cursor: pointer;
+  padding: 0;
+  transition: color 0.2s;
+}
+
+.action-btn:hover {
+  color: #1d4ed8;
+}
+
+.action-btn.active {
+  color: #ef4444;
+}
+
+/* Add subtle decorative blobs behind the detail card */
+.confession-detail {
+  position: relative;
+}
+
+.confession-detail::before,
+.confession-detail::after {
+  content: '';
+  position: absolute;
+  border-radius: 50%;
+  opacity: 0.08;
+  pointer-events: none;
+}
+
+.confession-detail::before {
+  width: 160px;
+  height: 160px;
+  background: #f97316; /* orange */
+  top: -40px;
+  right: -40px;
+}
+
+.confession-detail::after {
+  width: 120px;
+  height: 120px;
+  background: #06b6d4; /* cyan */
+  bottom: -30px;
+  left: -30px;
+}
+
+/* Reply Form */
+.reply-form {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  margin-top: 12px;
+  padding-top: 12px;
+  border-top: 1px solid #ddd;
+}
+
+.reply-form textarea {
+  width: 100%;
+  padding: 12px;
+  border: 1px solid #ddd;
+  border-radius: 6px;
+  font-size: 13px;
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', 'Oxygen',
+    'Ubuntu', 'Cantarell', 'Fira Sans', 'Droid Sans', 'Helvetica Neue',
+    sans-serif;
+  resize: vertical;
+}
+
+.reply-form textarea:focus {
+  outline: none;
+  border-color: #667eea;
+  box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
+}
+
+.reply-form .form-footer {
+  margin-top: 8px;
+}
+
+/* Replies Section */
+.replies-section {
+  margin-top: 16px;
+  margin-left: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  animation: slideIn 0.3s ease;
+  border-left: 2px solid #e5e7eb;
+  padding-left: 12px;
+}
+
+.reply {
+  padding: 8px 0;
+  display: flex;
+  gap: 10px;
+  align-items: flex-start;
+}
+
+.reply-avatar {
+  width: 32px;
+  height: 32px;
+  border-radius: 50%;
+  flex: 0 0 32px;
+  object-fit: cover;
+  background: #e6eef7;
+  display: block;
+}
+
+.reply-inner {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  flex: 1;
+  min-width: 0;
+}
+
+.reply-body {
+  font-size: 13px;
+  color: #374151;
+  line-height: 1.5;
+  display: flex;
+  gap: 8px;
+  align-items: center;
+  flex-wrap: wrap;
+}
+
+.reply-author {
+  font-weight: 700;
+  color: #111827;
+  font-size: 13px;
+}
+
+.reply-timestamp {
+  font-size: 11px;
+  color: #9ca3af;
+  font-weight: 400;
+}
+
+.reply-text {
+  color: #374151;
+  font-size: 13px;
+  word-wrap: break-word;
+  overflow-wrap: break-word;
+  line-height: 1.5;
+}
+
+.reply-meta {
+  display: flex;
+  gap: 8px;
+  align-items: center;
+  color: #9ca3af;
+  font-size: 11px;
+  margin-top: 4px;
+}
+
+.reply-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 8px;
+  font-size: 11px;
+}
+
+.reply-header .timestamp {
+  color: #999;
+  font-weight: 500;
+}
+
+.reply-content {
+  line-height: 1.6;
+  color: #333;
+  word-wrap: break-word;
+}
+
+/* Error and Success Messages */
+.form-error,
+.form-success,
+.error-message {
+  padding: 12px 16px;
+  border-radius: 8px;
+  margin-bottom: 16px;
+  font-size: 14px;
+  font-weight: 500;
+  animation: slideIn 0.3s ease;
+}
+
+.form-error,
+.error-message {
+  background-color: #fee;
+  color: #c33;
+  border: 1px solid #fcc;
+}
+
+.form-success {
+  background-color: #efe;
+  color: #3c3;
+  border: 1px solid #cfc;
+}
+
+/* Loading State */
+.loading {
+  text-align: center;
+  padding: 40px 20px;
+  color: #999;
+  font-size: 16px;
+}
+
+/* Empty State */
+.empty-state {
+  text-align: center;
+  padding: 40px 20px;
+  color: #999;
+  background: #f9f9f9;
+  border-radius: 8px;
+  border: 2px dashed #ddd;
+}
+
+/* Mobile Responsiveness */
+@media (max-width: 767px) {
+  .confession-detail-container {
+    padding: 8px;
+  }
+
+  .comment-form-section,
+  .comments-section {
+    padding: 16px;
+  }
+
+  .comment {
+    gap: 8px;
+    padding: 4px 0;
+  }
+
+  .avatar {
+    width: 32px;
+    height: 32px;
+    flex: 0 0 32px;
+  }
+
+  .replies-section {
+    margin-left: 0;
+    padding-left: 8px;
+  }
+
+  .reply-avatar {
+    width: 28px;
+    height: 28px;
+    flex: 0 0 28px;
+  }
+
+  .reply-body {
+    font-size: 12px;
+  }
+
+  .reply-author {
+    font-size: 12px;
+  }
+
+  .reply-text {
+    font-size: 12px;
+  }
+
+  .form-footer {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 8px;
+  }
+
+  .form-footer .char-count {
+    align-self: flex-end;
+  }
+
+  .comment-actions {
+    flex-wrap: wrap;
+    gap: 8px;
+  }
+
+  .action-btn {
+    font-size: 12px;
+  }
+
+  .confession-detail-content {
+    padding: 16px;
+    font-size: 14px;
+  }
+
+  .confession-detail-footer {
+    padding: 12px 16px;
+  }
+
+  .back-btn {
+    padding: 8px 12px;
+    font-size: 13px;
+  }
+
+  .comment-form-section h3,
+  .comments-section h3 {
+    font-size: 15px;
+  }
+
+  .comments-list {
+    gap: 12px;
+  }
+
+  .comment-text,
+  .reply-text {
+    font-size: 13px;
+  }
+
+  .comment-author,
+  .reply-author {
+    font-size: 13px;
+  }
+
+  .timestamp {
+    font-size: 11px;
+  }
+}
+
+.empty-state p {
+  margin: 0;
+  font-size: 14px;
+}
+
+@keyframes slideIn {
+  from {
+    opacity: 0;
+    transform: translateY(-10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+/* Responsive Design */
+@media (max-width: 768px) {
+  .confession-detail-container {
+    padding: 12px;
+  }
+
+  .confession-detail {
+    min-height: 280px;
+    border-radius: 10px;
+  }
+
+  .confession-detail-header {
+    padding: 12px 16px;
+  }
+
+  .confession-detail-content {
+    padding: 20px 16px;
+    max-height: 350px;
+    font-size: 15px;
+  }
+
+  .confession-detail-footer {
+    padding: 12px 16px;
+  }
+
+  .comment-form-section,
+  .comments-section {
+    padding: 16px;
+    border-radius: 10px;
+  }
+
+  .comment {
+    gap: 10px;
+    padding: 12px 0;
+  }
+
+  .avatar {
+    width: 36px;
+    height: 36px;
+    flex: 0 0 36px;
+  }
+
+  .comment-author {
+    font-size: 13px;
+  }
+
+  .comment-text {
+    font-size: 13px;
+  }
+
+  .form-footer {
+    flex-direction: column;
+    gap: 10px;
+  }
+
+  .form-footer .submit-btn {
+    width: 100%;
+  }
+
+  .comment-actions {
+    flex-wrap: wrap;
+    gap: 12px;
+    margin-top: 8px;
+  }
+
+  .action-btn {
+    font-size: 12px;
+  }
+
+  .back-btn {
+    width: 100%;
+    justify-content: center;
+  }
+
+  .replies-section {
+    margin-left: 36px;
+    margin-top: 12px;
+  }
+
+  .reply-form {
+    margin-top: 10px;
+  }
+}
+
+@media (max-width: 480px) {
+  .confession-detail-container {
+    padding: 8px;
+  }
+
+  .confession-detail {
+    min-height: 240px;
+    border-radius: 8px;
+  }
+
+  .confession-detail-header {
+    padding: 10px 14px;
+    font-size: 12px;
+  }
+
+  .confession-detail-content {
+    padding: 18px 14px;
+    max-height: 280px;
+    font-size: 13px;
+  }
+
+  .confession-detail-footer {
+    padding: 10px 14px;
+    font-size: 11px;
+  }
+
+  .comment-form-section,
+  .comments-section {
+    padding: 14px;
+    border-radius: 8px;
+  }
+
+  .comment-form-section h3,
+  .comments-section h3 {
+    font-size: 14px;
+    margin-bottom: 12px;
+  }
+
+  .comment {
+    gap: 8px;
+    padding: 8px 0;
+  }
+
+  .avatar {
+    width: 32px;
+    height: 32px;
+    flex: 0 0 32px;
+  }
+
+  .comment-author {
+    font-size: 12px;
+  }
+
+  .comment-text {
+    font-size: 12px;
+  }
+
+  .comment-top {
+    gap: 6px;
+    font-size: 11px;
+  }
+
+  .comment-top .timestamp {
+    font-size: 11px;
+    margin-left: auto;
+  }
+
+  .reply-form textarea,
+  .comment-form textarea {
+    font-size: 12px;
+    padding: 10px;
+  }
+
+  .action-btn {
+    font-size: 11px;
+    padding: 0;
+  }
+
+  .comment-actions {
+    gap: 10px;
+    margin-top: 6px;
+  }
+
+  .back-btn {
+    padding: 8px 12px;
+    font-size: 12px;
+  }
+
+  .replies-section {
+    margin-left: 32px;
+    margin-top: 10px;
+    padding-left: 10px;
+  }
+
+  .reply-body {
+    font-size: 12px;
+  }
+
+  .reply-author {
+    font-size: 12px;
+  }
+
+  .reply-meta {
+    font-size: 10px;
+  }
+}

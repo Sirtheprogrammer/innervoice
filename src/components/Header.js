@@ -7,10 +7,10 @@ export default function Header({ toggleSidebar }) {
       <div className="header-inner">
         {/* hamburger moved to the right for mobile UX */}
         <div className="brand">
-          <img src="/chiefmedia.jpg" alt="CHIEF G MEDIA logo" className="brand-logo" />
+          <img src="/InnerVoice.png" alt="InnerVoice logo" className="brand-logo" />
           <div className="brand-text">
-            <div className="brand-title">CHIEF G MEDIA</div>
-            <div className="brand-sub">Media & Creative</div>
+            <div className="brand-title">INNERVOICE</div>
+            <div className="brand-sub">Say your Inner Voice</div>
           </div>
         </div>
 

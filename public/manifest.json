@@ -1,6 +1,6 @@
 {
-  "short_name": "ChiefGmedia",
-  "name": "ChiefGmedia app",
+  "short_name": "InnerVoice",
+  "name": "InnerVoice ",
   "icons": [
     {
       "src": "favicon.ico",
@@ -8,12 +8,12 @@
       "type": "image/x-icon"
     },
     {
-      "src": "chiefgmedia192.png",
+      "src": "InnerVoice.png",
       "type": "image/png",
       "sizes": "192x192"
     },
     {
-      "src": "chiefgmedia512.png",
+      "src": "InnerVoice.png",
       "type": "image/png",
       "sizes": "512x512"
     }

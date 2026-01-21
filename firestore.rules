@@ -103,6 +103,64 @@ service cloud.firestore {
       allow delete: if isAuthenticated();
     }
 
+    // Confessions Collection Rules (Anonymous posts)
+    match /confessions/{confessionId} {
+      // Read: Public can read all confessions
+      allow read: if true;
+      
+      // Create: Anyone (no auth required) can create a confession
+      allow create: if request.resource.data.content != null &&
+                       request.resource.data.content is string &&
+                       request.resource.data.content.size() > 0 &&
+                       request.resource.data.content.size() <= 5000 &&
+                       request.resource.data.createdAt != null &&
+                       request.resource.data.updatedAt != null &&
+                       request.resource.data.commentCount == 0 &&
+                       request.resource.data.flagCount == 0;
+      
+      // Update: Only for updating comment count and flag count
+      allow update: if request.resource.data.content == resource.data.content &&
+                       request.resource.data.createdAt == resource.data.createdAt &&
+                       request.resource.data.updatedAt != null &&
+                       ((request.resource.data.commentCount is number) ||
+                        (request.resource.data.flagCount is number));
+      
+      // Delete: Only admins can delete
+      allow delete: if isAdmin();
+    }
+
+    // Comments Collection Rules (Comments and replies on confessions)
+    match /comments/{commentId} {
+      // Read: Public can read all comments
+      allow read: if true;
+      
+      // Create: Anyone (no auth required) can create a comment
+      allow create: if request.resource.data.confessionId != null &&
+                       request.resource.data.confessionId is string &&
+                       request.resource.data.content != null &&
+                       request.resource.data.content is string &&
+                       request.resource.data.content.size() > 0 &&
+                       request.resource.data.content.size() <= 2000 &&
+                       request.resource.data.createdAt != null &&
+                       request.resource.data.updatedAt != null &&
+                       request.resource.data.replyCount == 0 &&
+                       request.resource.data.flagCount == 0 &&
+                       (request.resource.data.parentCommentId == null ||
+                        request.resource.data.parentCommentId is string);
+      
+      // Update: Only for updating reply count
+      allow update: if request.resource.data.content == resource.data.content &&
+                       request.resource.data.confessionId == resource.data.confessionId &&
+                       request.resource.data.parentCommentId == resource.data.parentCommentId &&
+                       request.resource.data.createdAt == resource.data.createdAt &&
+                       request.resource.data.updatedAt != null &&
+                       ((request.resource.data.replyCount is number) ||
+                        (request.resource.data.flagCount is number));
+      
+      // Delete: Only admins can delete (moderation)
+      allow delete: if isAdmin();
+    }
+
     // Admins Collection (for tracking admin users)
     match /admins/{userId} {
       // Read: Only the user can read their own admin document
