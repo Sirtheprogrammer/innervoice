@@ -32,7 +32,7 @@ const calculateRankingScore = (confession) => {
   return recencyScore + (engagementScore * 2) + recentBoost;
 };
 
-export default function Confessions({ searchQuery = '' }) {
+export default function Confessions({ searchQuery = '', sidebarOpen = false }) {
   const navigate = useNavigate();
   const { user } = useAuth();
   const [confessions, setConfessions] = useState([]);
@@ -246,8 +246,8 @@ export default function Confessions({ searchQuery = '' }) {
 
   return (
     <div className="confessions-container">
-      {/* Fixed Share Button */}
-      {!showForm && (
+      {/* Fixed Share Button - hide when sidebar is open */}
+      {!showForm && !sidebarOpen && (
         <button
           className="show-form-btn"
           onClick={handleShareClick}
@@ -256,7 +256,7 @@ export default function Confessions({ searchQuery = '' }) {
             top: '140px',
             left: '50%',
             transform: 'translateX(-50%)',
-            zIndex: 1200,
+            zIndex: 1050,
             width: '350px',
             maxWidth: 'calc(100% - 40px)',
             padding: '16px 24px',

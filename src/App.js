@@ -34,7 +34,7 @@ export default function App() {
           aria-hidden={!sidebarOpen}
         />
         <main className="main-content" id="main">
-          <Confessions searchQuery={searchQuery} />
+          <Confessions searchQuery={searchQuery} sidebarOpen={sidebarOpen} />
         </main>
       </div>
 
