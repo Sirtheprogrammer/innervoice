@@ -13,12 +13,12 @@
   align-items: center;
   gap: 8px;
   padding: 10px 16px;
-  background: white;
-  border: 1px solid #ddd;
+  background: var(--bg-card);
+  border: 1px solid var(--border-color);
   border-radius: 6px;
   font-size: 14px;
   font-weight: 600;
-  color: #333;
+  color: var(--text-primary);
   cursor: pointer;
   transition: all 0.2s;
   margin-bottom: 24px;
@@ -26,7 +26,7 @@
 }
 
 .back-btn:hover {
-  background: #f5f5f5;
+  background: var(--gray-light);
   border-color: #999;
   transform: translateX(-4px);
 }
@@ -40,12 +40,12 @@
 
 /* Confession Detail - Picture-like Card */
 .confession-detail {
-  background: white;
+  background: var(--bg-card);
   border-radius: 12px;
   padding: 0;
   overflow: hidden;
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
-  border: 1px solid #e5e7eb;
+  box-shadow: 0 4px 12px var(--shadow-color);
+  border: 1px solid var(--border-color);
   animation: slideIn 0.3s ease;
   min-height: 300px;
   display: flex;
@@ -59,7 +59,7 @@
   padding: 12px 16px;
   background: transparent;
   color: inherit;
-  border-bottom: 1px solid rgba(15, 23, 42, 0.04);
+  border-bottom: 1px solid var(--border-color);
 }
 
 .confession-detail-header .timestamp {
@@ -76,23 +76,23 @@
   flex: 1;
   font-size: 16px;
   line-height: 1.8;
-  color: #333;
+  color: var(--text-primary);
   padding: 32px 24px;
   word-wrap: break-word;
   white-space: pre-wrap;
   overflow-y: auto;
   max-height: 400px;
-  background: white;
+  background: var(--bg-card);
 }
 
 .confession-detail-footer {
   display: flex;
   gap: 16px;
   padding: 16px 24px;
-  border-top: 1px solid #f0f0f0;
-  background: #f9f9f9;
+  border-top: 1px solid var(--border-color);
+  background: var(--gray-light);
   font-size: 14px;
-  color: #666;
+  color: var(--text-secondary);
 }
 
 .confession-detail-footer .comment-count {
@@ -105,11 +105,11 @@
 
 /* Comment Form Section */
 .comment-form-section {
-  background: white;
+  background: var(--bg-card);
   border-radius: 12px;
   padding: 24px;
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
-  border: 1px solid #e5e7eb;
+  box-shadow: 0 4px 12px var(--shadow-color);
+  border: 1px solid var(--border-color);
   animation: slideIn 0.4s ease;
 }
 
@@ -117,7 +117,7 @@
   margin-top: 0;
   margin-bottom: 16px;
   font-size: 16px;
-  color: #333;
+  color: var(--text-primary);
   font-weight: 600;
 }
 
@@ -130,9 +130,11 @@
 .comment-form textarea {
   width: 100%;
   padding: 12px;
-  border: 1px solid #ddd;
+  border: 1px solid var(--border-color);
   border-radius: 8px;
   font-size: 14px;
+  color: var(--text-primary);
+  background-color: var(--bg-input);
   font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', 'Oxygen',
     'Ubuntu', 'Cantarell', 'Fira Sans', 'Droid Sans', 'Helvetica Neue',
     sans-serif;
@@ -147,7 +149,7 @@
 }
 
 .comment-form textarea:disabled {
-  background-color: #f5f5f5;
+  background-color: var(--gray-light);
   cursor: not-allowed;
 }
 
@@ -165,7 +167,8 @@
 
 .form-footer .submit-btn {
   padding: 10px 20px;
-  background: #10b981; /* solid green */
+  background: #10b981;
+  /* solid green */
   color: white;
   border: none;
   border-radius: 6px;
@@ -187,11 +190,11 @@
 
 /* Comments Section */
 .comments-section {
-  background: white;
+  background: var(--bg-card);
   border-radius: 12px;
   padding: 24px;
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
-  border: 1px solid #e5e7eb;
+  box-shadow: 0 4px 12px var(--shadow-color);
+  border: 1px solid var(--border-color);
   animation: slideIn 0.5s ease;
 }
 
@@ -199,7 +202,7 @@
   margin-top: 0;
   margin-bottom: 20px;
   font-size: 16px;
-  color: #333;
+  color: var(--text-primary);
   font-weight: 600;
 }
 
@@ -233,7 +236,7 @@
   border-radius: 50%;
   flex: 0 0 40px;
   object-fit: cover;
-  background: #e6eef7;
+  background: var(--gray-light);
   display: block;
 }
 
@@ -244,12 +247,12 @@
 
 .comment-author {
   font-weight: 700;
-  color: #111827;
+  color: var(--text-primary);
   font-size: 14px;
 }
 
 .comment-text {
-  color: #374151;
+  color: var(--text-secondary);
   font-size: 14px;
   line-height: 1.5;
   margin-top: 4px;
@@ -296,7 +299,7 @@
 .comment-content {
   font-size: 14px;
   line-height: 1.6;
-  color: #333;
+  color: var(--text-primary);
   margin: 12px 0;
   word-wrap: break-word;
 }
@@ -338,17 +341,19 @@
   position: absolute;
   right: 8px;
   top: 46px;
-  background: rgba(17, 24, 39, 0.95);
-  color: #fff;
+  background: var(--black);
+  color: var(--text-inverse);
   padding: 8px 10px;
   border-radius: 6px;
   font-size: 13px;
-  box-shadow: 0 8px 20px rgba(0,0,0,0.18);
+  box-shadow: 0 8px 20px rgba(0, 0, 0, 0.18);
   z-index: 1300;
 }
 
 /* Positioning container for header actions to anchor tooltip */
-.confession-detail-header > div:nth-child(2) { position: relative; }
+.confession-detail-header>div:nth-child(2) {
+  position: relative;
+}
 
 /* Add subtle decorative blobs behind the detail card */
 .confession-detail {
@@ -362,26 +367,29 @@
   right: 0;
   top: 0;
   bottom: 0;
-  background: rgba(0,0,0,0.45);
+  background: rgba(0, 0, 0, 0.45);
   display: flex;
   align-items: center;
   justify-content: center;
   z-index: 2000;
 }
+
 .share-modal-inner {
   width: 92%;
   max-width: 420px;
-  background: #fff;
+  background: var(--bg-card);
   border-radius: 10px;
   padding: 12px;
-  box-shadow: 0 8px 30px rgba(0,0,0,0.2);
+  box-shadow: 0 8px 30px rgba(0, 0, 0, 0.2);
 }
+
 .share-modal-header {
   display: flex;
   align-items: center;
   justify-content: space-between;
   margin-bottom: 8px;
 }
+
 .share-modal-close {
   background: transparent;
   border: none;
@@ -389,14 +397,16 @@
   line-height: 1;
   cursor: pointer;
 }
+
 .share-options {
   display: grid;
   grid-template-columns: repeat(2, 1fr);
   gap: 8px;
 }
+
 .share-option {
-  background: #f5f5f5;
-  border: 1px solid #e5e5e5;
+  background: var(--gray-light);
+  border: 1px solid var(--border-color);
   padding: 10px 8px;
   border-radius: 8px;
   cursor: pointer;
@@ -407,7 +417,10 @@
   justify-content: center;
   gap: 6px;
 }
-.share-option:active { transform: scale(0.995); }
+
+.share-option:active {
+  transform: scale(0.995);
+}
 
 .confession-detail::before,
 .confession-detail::after {
@@ -421,7 +434,8 @@
 .confession-detail::before {
   width: 160px;
   height: 160px;
-  background: #f97316; /* orange */
+  background: #f97316;
+  /* orange */
   top: -40px;
   right: -40px;
 }
@@ -429,7 +443,8 @@
 .confession-detail::after {
   width: 120px;
   height: 120px;
-  background: #06b6d4; /* cyan */
+  background: #06b6d4;
+  /* cyan */
   bottom: -30px;
   left: -30px;
 }
@@ -441,15 +456,17 @@
   gap: 12px;
   margin-top: 12px;
   padding-top: 12px;
-  border-top: 1px solid #ddd;
+  border-top: 1px solid var(--border-color);
 }
 
 .reply-form textarea {
   width: 100%;
   padding: 12px;
-  border: 1px solid #ddd;
+  border: 1px solid var(--border-color);
   border-radius: 6px;
   font-size: 13px;
+  background: var(--bg-input);
+  color: var(--text-primary);
   font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', 'Oxygen',
     'Ubuntu', 'Cantarell', 'Fira Sans', 'Droid Sans', 'Helvetica Neue',
     sans-serif;
@@ -474,7 +491,7 @@
   flex-direction: column;
   gap: 12px;
   animation: slideIn 0.3s ease;
-  border-left: 2px solid #e5e7eb;
+  border-left: 2px solid var(--border-color);
   padding-left: 12px;
 }
 
@@ -491,7 +508,7 @@
   border-radius: 50%;
   flex: 0 0 32px;
   object-fit: cover;
-  background: #e6eef7;
+  background: var(--gray-light);
   display: block;
 }
 
@@ -505,7 +522,7 @@
 
 .reply-body {
   font-size: 13px;
-  color: #374151;
+  color: var(--text-secondary);
   line-height: 1.5;
   display: flex;
   gap: 8px;
@@ -515,7 +532,7 @@
 
 .reply-author {
   font-weight: 700;
-  color: #111827;
+  color: var(--text-primary);
   font-size: 13px;
 }
 
@@ -526,7 +543,7 @@
 }
 
 .reply-text {
-  color: #374151;
+  color: var(--text-secondary);
   font-size: 13px;
   word-wrap: break-word;
   overflow-wrap: break-word;
@@ -557,7 +574,7 @@
 
 .reply-content {
   line-height: 1.6;
-  color: #333;
+  color: var(--text-primary);
   word-wrap: break-word;
 }
 
@@ -598,10 +615,10 @@
 .empty-state {
   text-align: center;
   padding: 40px 20px;
-  color: #999;
-  background: #f9f9f9;
+  color: var(--text-secondary);
+  background: var(--gray-light);
   border-radius: 8px;
-  border: 2px dashed #ddd;
+  border: 2px dashed var(--border-color);
 }
 
 /* Mobile Responsiveness */
@@ -716,6 +733,7 @@
     opacity: 0;
     transform: translateY(-10px);
   }
+
   to {
     opacity: 1;
     transform: translateY(0);

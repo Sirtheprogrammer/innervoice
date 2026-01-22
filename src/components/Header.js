@@ -1,10 +1,12 @@
 import React, { useState, useRef, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
+import { useTheme } from '../context/ThemeContext';
 import '../App.css';
 
 export default function Header({ toggleSidebar }) {
   const { user, logout } = useAuth();
+  const { theme, toggleTheme } = useTheme();
   const [menuOpen, setMenuOpen] = useState(false);
   const menuRef = useRef(null);
 
@@ -46,51 +48,72 @@ export default function Header({ toggleSidebar }) {
         </div>
 
         <nav className="header-nav" aria-label="Main navigation">
-           <a href="#home">Home</a>
-           <a href="#updates">Updates</a>
-           <a href="#contacts">Contacts</a>
-           <a href="#about">About Us</a>
-         </nav>
+          <a href="#home">Home</a>
+          <a href="#updates">Updates</a>
+          <a href="#contacts">Contacts</a>
+          <a href="#about">About Us</a>
+        </nav>
 
-        <button
-          className="hamburger"
-          aria-label="Toggle navigation"
-          onClick={toggleSidebar}
-        >
-          <span className="hamburger-bar" />
-          <span className="hamburger-bar" />
-          <span className="hamburger-bar" />
-        </button>
+        <div className="header-right" style={{ display: 'flex', alignItems: 'center' }}>
+          <button
+            onClick={toggleTheme}
+            className="theme-toggle-btn"
+            aria-label="Toggle theme"
+            style={{
+              background: 'transparent',
+              border: 'none',
+              color: 'var(--white)',
+              fontSize: '20px',
+              cursor: 'pointer',
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              padding: '8px'
+            }}
+          >
+            {theme === 'light' ? '🌙' : '☀️'}
+          </button>
 
-        <div className="auth-nav" aria-label="Authentication">
-          {!user ? (
-            <>
-              <Link to="/register" className="auth-link register-link">Register</Link>
-              <Link to="/login" className="auth-link login-link">Login</Link>
-            </>
-          ) : (
-            <div className="user-menu" ref={menuRef}>
-              <button
-                className="user-avatar"
-                onClick={() => setMenuOpen((s) => !s)}
-                aria-label="Open user menu"
-              >
-                {user.photoURL ? (
-                  <img src={user.photoURL} alt="avatar" />
-                ) : (
-                  <span className="avatar-initial">{getInitial()}</span>
+          <div className="auth-nav" aria-label="Authentication">
+            {!user ? (
+              <>
+                <Link to="/register" className="auth-link register-link">Register</Link>
+                <Link to="/login" className="auth-link login-link">Login</Link>
+              </>
+            ) : (
+              <div className="user-menu" ref={menuRef}>
+                <button
+                  className="user-avatar"
+                  onClick={() => setMenuOpen((s) => !s)}
+                  aria-label="Open user menu"
+                >
+                  {user.photoURL ? (
+                    <img src={user.photoURL} alt="avatar" />
+                  ) : (
+                    <span className="avatar-initial">{getInitial()}</span>
+                  )}
+                </button>
+
+                {menuOpen && (
+                  <div className="user-dropdown">
+                    <div className="dropdown-item">{user.email}</div>
+                    <Link to="/profile" className="dropdown-item">Profile</Link>
+                    <button onClick={handleLogout} className="dropdown-item">Logout</button>
+                  </div>
                 )}
-              </button>
+              </div>
+            )}
+          </div>
 
-              {menuOpen && (
-                <div className="user-dropdown">
-                  <div className="dropdown-item">{user.email}</div>
-                  <Link to="/profile" className="dropdown-item">Profile</Link>
-                  <button onClick={handleLogout} className="dropdown-item">Logout</button>
-                </div>
-              )}
-            </div>
-          )}
+          <button
+            className="hamburger"
+            aria-label="Toggle navigation"
+            onClick={toggleSidebar}
+          >
+            <span className="hamburger-bar" />
+            <span className="hamburger-bar" />
+            <span className="hamburger-bar" />
+          </button>
         </div>
       </div>
     </header>

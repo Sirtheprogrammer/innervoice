@@ -6,7 +6,10 @@ import Confessions from './components/Confessions';
 import Sidebar from './components/Sidebar';
 import Footer from './components/Footer';
 
-function App() {
+import { ThemeProvider, useTheme } from './context/ThemeContext';
+
+function AppContent() {
+  const { theme } = useTheme();
   const [sidebarOpen, setSidebarOpen] = React.useState(false);
 
   const toggleSidebar = () => setSidebarOpen(open => !open);
@@ -14,7 +17,7 @@ function App() {
   const closeSidebar = () => setSidebarOpen(false);
 
   return (
-    <div className="site-root">
+    <div className="site-root" data-theme={theme}>
       <Header toggleSidebar={toggleSidebar} />
       <SearchBar />
       <div className="app-body">
@@ -31,8 +34,16 @@ function App() {
       </div>
 
       <Footer />
-      
+
     </div>
+  );
+}
+
+function App() {
+  return (
+    <ThemeProvider>
+      <AppContent />
+    </ThemeProvider>
   );
 }
 
