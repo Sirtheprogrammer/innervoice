@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useState, useCallback } from 'react';
 import './App.css';
 import Header from './components/Header';
 import SearchBar from './components/SearchBar';
@@ -10,16 +10,21 @@ import { useTheme } from './context/ThemeContext';
 
 export default function App() {
   const { theme } = useTheme();
-  const [sidebarOpen, setSidebarOpen] = React.useState(false);
+  const [sidebarOpen, setSidebarOpen] = useState(false);
+  const [searchQuery, setSearchQuery] = useState('');
 
   const toggleSidebar = () => setSidebarOpen(open => !open);
 
   const closeSidebar = () => setSidebarOpen(false);
 
+  const handleSearch = useCallback((query) => {
+    setSearchQuery(query);
+  }, []);
+
   return (
     <div className="site-root" data-theme={theme}>
       <Header toggleSidebar={toggleSidebar} />
-      <SearchBar />
+      <SearchBar onSearch={handleSearch} />
       <div className="app-body">
         <Sidebar isOpen={sidebarOpen} />
         {/* mobile overlay: clicking closes the sidebar */}
@@ -29,7 +34,7 @@ export default function App() {
           aria-hidden={!sidebarOpen}
         />
         <main className="main-content" id="main">
-          <Confessions />
+          <Confessions searchQuery={searchQuery} />
         </main>
       </div>
 

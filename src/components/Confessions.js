@@ -1,11 +1,12 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useState, useMemo } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { MdComment, MdShare, MdFavorite, MdFavoriteBorder } from 'react-icons/md';
 import { getAllConfessions, createConfession, likeConfession } from '../services/confessionsService';
 import { useAuth } from '../context/AuthContext';
+import { fuzzySearch } from '../utils/fuzzySearch';
 import '../styles/Confessions.css';
 
-export default function Confessions() {
+export default function Confessions({ searchQuery = '' }) {
   const navigate = useNavigate();
   const { user } = useAuth();
   const [confessions, setConfessions] = useState([]);
@@ -17,6 +18,14 @@ export default function Confessions() {
   const [showForm, setShowForm] = useState(false);
   const [formContent, setFormContent] = useState('');
   const [formTitle, setFormTitle] = useState('');
+
+  // Filter confessions based on search query using fuzzy search
+  const filteredConfessions = useMemo(() => {
+    if (!searchQuery || !searchQuery.trim()) {
+      return confessions;
+    }
+    return fuzzySearch(confessions, searchQuery, ['title', 'content'], 0.3);
+  }, [confessions, searchQuery]);
 
   // Track liked confessions (persisted in localStorage)
   const [likedConfessions, setLikedConfessions] = useState(() => {
@@ -321,73 +330,86 @@ export default function Confessions() {
           <div className="empty-state">
             <p>No confessions yet. Be the first to share!</p>
           </div>
+        ) : filteredConfessions.length === 0 ? (
+          <div className="empty-state search-no-results">
+            <p>No confessions found matching "{searchQuery}"</p>
+            <p className="search-hint">Try a different search term or check for typos</p>
+          </div>
         ) : (
-          confessions.map((confession) => (
-            <div
-              key={confession.id}
-              className="confession-card"
-              onClick={() => handleViewConfession(confession.id)}
-            >
-              <div className="confession-header">
-                <span className="timestamp">
-                  {formatDate(confession.createdAt)}
-                </span>
+          <>
+            {searchQuery && (
+              <div className="search-results-info">
+                Found {filteredConfessions.length} confession{filteredConfessions.length !== 1 ? 's' : ''}
+                matching "{searchQuery}"
               </div>
-              {confession.title ? <h3 className="confession-title">{confession.title}</h3> : null}
-              <p className="confession-content">
-                {truncateText(confession.content, 300)}
-              </p>
-              <div className="confession-footer">
-                <div className="confession-stats">
-                  <button
-                    className="like-btn"
-                    onClick={(e) => handleLikeConfession(e, confession.id)}
-                    title={likedConfessions.includes(confession.id) ? 'Already liked' : 'Like this confession'}
-                    style={{
-                      background: 'none',
-                      border: 'none',
-                      cursor: likedConfessions.includes(confession.id) ? 'default' : 'pointer',
-                      color: likedConfessions.includes(confession.id) ? '#ef4444' : 'var(--text-secondary)',
-                      display: 'flex',
-                      alignItems: 'center',
-                      gap: '4px',
-                      fontSize: '0.9rem',
-                      padding: '4px 8px'
-                    }}
-                  >
-                    {likedConfessions.includes(confession.id) ? <MdFavorite /> : <MdFavoriteBorder />} {confession.likeCount || 0}
-                  </button>
-                  <span className="comment-count">
-                    <MdComment /> {confession.commentCount || 0} comments
+            )}
+            {filteredConfessions.map((confession) => (
+              <div
+                key={confession.id}
+                className="confession-card"
+                onClick={() => handleViewConfession(confession.id)}
+              >
+                <div className="confession-header">
+                  <span className="timestamp">
+                    {formatDate(confession.createdAt)}
                   </span>
-                  <button
-                    className="share-btn"
-                    onClick={(e) => handleShareConfession(e, confession)}
-                    title="Share this confession"
-                    style={{
-                      background: 'none',
-                      border: 'none',
-                      cursor: 'pointer',
-                      color: 'var(--text-secondary)',
-                      display: 'flex',
-                      alignItems: 'center',
-                      gap: '4px',
-                      marginLeft: '15px',
-                      fontSize: '0.9rem',
-                      padding: '4px 8px',
-                      flexShrink: 0,
-                      transition: 'none',
-                      transform: 'none',
-                      whiteSpace: 'nowrap'
-                    }}
-                  >
-                    <MdShare /> Share
-                  </button>
                 </div>
-                <span className="read-more">Read more →</span>
+                {confession.title ? <h3 className="confession-title">{confession.title}</h3> : null}
+                <p className="confession-content">
+                  {truncateText(confession.content, 300)}
+                </p>
+                <div className="confession-footer">
+                  <div className="confession-stats">
+                    <button
+                      className="like-btn"
+                      onClick={(e) => handleLikeConfession(e, confession.id)}
+                      title={likedConfessions.includes(confession.id) ? 'Already liked' : 'Like this confession'}
+                      style={{
+                        background: 'none',
+                        border: 'none',
+                        cursor: likedConfessions.includes(confession.id) ? 'default' : 'pointer',
+                        color: likedConfessions.includes(confession.id) ? '#ef4444' : 'var(--text-secondary)',
+                        display: 'flex',
+                        alignItems: 'center',
+                        gap: '4px',
+                        fontSize: '0.9rem',
+                        padding: '4px 8px'
+                      }}
+                    >
+                      {likedConfessions.includes(confession.id) ? <MdFavorite /> : <MdFavoriteBorder />} {confession.likeCount || 0}
+                    </button>
+                    <span className="comment-count">
+                      <MdComment /> {confession.commentCount || 0} comments
+                    </span>
+                    <button
+                      className="share-btn"
+                      onClick={(e) => handleShareConfession(e, confession)}
+                      title="Share this confession"
+                      style={{
+                        background: 'none',
+                        border: 'none',
+                        cursor: 'pointer',
+                        color: 'var(--text-secondary)',
+                        display: 'flex',
+                        alignItems: 'center',
+                        gap: '4px',
+                        marginLeft: '15px',
+                        fontSize: '0.9rem',
+                        padding: '4px 8px',
+                        flexShrink: 0,
+                        transition: 'none',
+                        transform: 'none',
+                        whiteSpace: 'nowrap'
+                      }}
+                    >
+                      <MdShare /> Share
+                    </button>
+                  </div>
+                  <span className="read-more">Read more →</span>
+                </div>
               </div>
-            </div>
-          ))
+            ))}
+          </>
         )}
       </div>
     </div>
