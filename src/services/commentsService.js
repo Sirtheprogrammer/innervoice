@@ -10,11 +10,26 @@ import {
   updateDoc,
   getDoc,
   serverTimestamp,
+  getCountFromServer,
 } from 'firebase/firestore';
 import { db } from '../firebase/config';
 import { updateConfessionCommentCount } from './confessionsService';
 
 const COMMENTS_COLLECTION = 'comments';
+
+/**
+ * Get total number of comments
+ */
+export async function getCommentCount() {
+  try {
+    const coll = collection(db, COMMENTS_COLLECTION);
+    const snapshot = await getCountFromServer(coll);
+    return snapshot.data().count;
+  } catch (error) {
+    console.error('Error fetching comment count:', error);
+    return 0;
+  }
+}
 
 /**
  * Validates comment data
@@ -221,6 +236,7 @@ const commentsService = {
   flagComment,
   moderateComment,
   getFlaggedCommentsByConfession,
+  getCommentCount,
 };
 
 export default commentsService;

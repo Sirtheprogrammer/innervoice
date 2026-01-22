@@ -1,8 +1,11 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useAuth } from '../context/AuthContext';
 import { useNavigate } from 'react-router-dom';
-import { MdLogout, MdMenu } from 'react-icons/md';
+import { MdLogout, MdMenu, MdPeople, MdComment, MdMessage, MdRefresh } from 'react-icons/md';
 import AdminSidebar from '../components/AdminSidebar';
+import userService from '../services/userService';
+import confessionsService from '../services/confessionsService';
+import commentsService from '../services/commentsService';
 import '../styles/AdminPanel.css';
 
 export default function AdminPanel() {
@@ -10,6 +13,53 @@ export default function AdminPanel() {
   const navigate = useNavigate();
   const [loading, setLoading] = useState(false);
   const [sidebarOpen, setSidebarOpen] = useState(false);
+
+  // Stats state
+  const [stats, setStats] = useState({
+    users: 0,
+    confessions: 0,
+    comments: 0
+  });
+
+  // Users state
+  const [users, setUsers] = useState([]);
+  const [loadingUsers, setLoadingUsers] = useState(false);
+  const [userActionLoading, setUserActionLoading] = useState(null);
+
+  // Fetch dashboard data
+  useEffect(() => {
+    fetchStats();
+    fetchUsers();
+  }, []);
+
+  const fetchStats = async () => {
+    try {
+      const [userCount, confessionCount, commentCount] = await Promise.all([
+        userService.getUserCount(),
+        confessionsService.getConfessionCount(),
+        commentsService.getCommentCount()
+      ]);
+      setStats({
+        users: userCount,
+        confessions: confessionCount,
+        comments: commentCount
+      });
+    } catch (error) {
+      console.error('Error fetching stats:', error);
+    }
+  };
+
+  const fetchUsers = async () => {
+    setLoadingUsers(true);
+    try {
+      const { users } = await userService.getAllUsers(20);
+      setUsers(users);
+    } catch (error) {
+      console.error('Error fetching users:', error);
+    } finally {
+      setLoadingUsers(false);
+    }
+  };
 
   const handleLogout = async () => {
     setLoading(true);
@@ -19,6 +69,26 @@ export default function AdminPanel() {
     } catch (err) {
       console.error('Logout failed:', err);
       setLoading(false);
+    }
+  };
+
+  const handleBanUser = async (userId, isBanned) => {
+    setUserActionLoading(userId);
+    try {
+      if (isBanned) {
+        await userService.unbanUser(userId);
+      } else {
+        await userService.banUser(userId);
+      }
+      // Refresh user list to show updated status
+      await fetchUsers();
+      // Also refresh stats as banned users might affect active user count logic if we had it
+      fetchStats();
+    } catch (error) {
+      console.error('Error toggling ban status:', error);
+      alert('Failed to update user status');
+    } finally {
+      setUserActionLoading(null);
     }
   };
 
@@ -52,9 +122,81 @@ export default function AdminPanel() {
 
       <main className={`admin-main ${sidebarOpen ? 'sidebar-open' : ''}`}>
         <section className="admin-section">
-          <h2>Dashboard</h2>
-          <div className="admin-section-content">
-            <p>Welcome to the InnerVoice Admin Panel. Use the sidebar to navigate and manage content.</p>
+          <div className="section-header">
+            <h2>Dashboard Overview</h2>
+            <button onClick={() => { fetchStats(); fetchUsers(); }} className="refresh-btn">
+              <MdRefresh /> Refresh
+            </button>
+          </div>
+
+          <div className="stats-grid">
+            <div className="stat-card">
+              <div className="stat-icon users-icon"><MdPeople /></div>
+              <div className="stat-content">
+                <h3>Total Users</h3>
+                <p>{stats.users}</p>
+              </div>
+            </div>
+            <div className="stat-card">
+              <div className="stat-icon confessions-icon"><MdComment /></div>
+              <div className="stat-content">
+                <h3>Confessions</h3>
+                <p>{stats.confessions}</p>
+              </div>
+            </div>
+            <div className="stat-card">
+              <div className="stat-icon comments-icon"><MdMessage /></div>
+              <div className="stat-content">
+                <h3>Comments</h3>
+                <p>{stats.comments}</p>
+              </div>
+            </div>
+          </div>
+        </section>
+
+        <section className="admin-section">
+          <h2>User Management</h2>
+          <div className="admin-table-container">
+            {loadingUsers ? (
+              <div className="admin-loading">Loading users...</div>
+            ) : users.length === 0 ? (
+              <div className="admin-empty">No users found.</div>
+            ) : (
+              <table className="admin-table">
+                <thead>
+                  <tr>
+                    <th>User ID</th>
+                    <th>Email</th>
+                    <th>Joined</th>
+                    <th>Status</th>
+                    <th>Actions</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {users.map(user => (
+                    <tr key={user.id}>
+                      <td className="monospace">{user.id.substring(0, 8)}...</td>
+                      <td>{user.email || 'Anonymous'}</td>
+                      <td>{new Date(user.createdAt).toLocaleDateString()}</td>
+                      <td>
+                        <span className={`status-badge ${user.banned ? 'banned' : 'active'}`}>
+                          {user.banned ? 'Banned' : 'Active'}
+                        </span>
+                      </td>
+                      <td>
+                        <button
+                          className={`action-btn ${user.banned ? 'unban-btn' : 'ban-btn'}`}
+                          onClick={() => handleBanUser(user.id, user.banned)}
+                          disabled={userActionLoading === user.id}
+                        >
+                          {userActionLoading === user.id ? '...' : (user.banned ? 'Unban' : 'Ban')}
+                        </button>
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            )}
           </div>
         </section>
       </main>

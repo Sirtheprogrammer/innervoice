@@ -12,10 +12,25 @@ import {
   updateDoc,
   increment,
   serverTimestamp,
+  getCountFromServer,
 } from 'firebase/firestore';
 import { db } from '../firebase/config';
 
 const CONFESSIONS_COLLECTION = 'confessions';
+
+/**
+ * Get total number of confessions
+ */
+export async function getConfessionCount() {
+  try {
+    const coll = collection(db, CONFESSIONS_COLLECTION);
+    const snapshot = await getCountFromServer(coll);
+    return snapshot.data().count;
+  } catch (error) {
+    console.error('Error fetching confession count:', error);
+    return 0;
+  }
+}
 
 /**
  * Validates confession data
@@ -324,6 +339,7 @@ const confessionsService = {
   moderateConfession,
   updateConfession,
   getFlaggedConfessions,
+  getConfessionCount,
 };
 
 export default confessionsService;
