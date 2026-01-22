@@ -29,7 +29,7 @@ export default function Sidebar({ isOpen = false }) {
           </>
         ) : (
           <>
-            <Link to="/profile" className="side-link">Profile System</Link>
+            <Link to="/profile" className="side-link">Profile</Link>
             <Link to="/profile" state={{ activeTab: 'confessions' }} className="side-link">My Confessions</Link>
             <button onClick={handleLogout} className="side-link logout-btn">Logout</button>
           </>

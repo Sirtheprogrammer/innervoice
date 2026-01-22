@@ -107,13 +107,15 @@ service cloud.firestore {
       allow delete: if isAuthenticated();
     }
 
-    // Confessions Collection Rules (Anonymous posts)
+    // Confessions Collection Rules (Authenticated posts)
     match /confessions/{confessionId} {
       // Read: Public can read all confessions
       allow read: if true;
       
-      // Create: Anyone (no auth required) can create a confession
-      allow create: if request.resource.data.content != null &&
+      // Create: Authenticated users can create. Must set userId to own uid.
+      allow create: if isAuthenticated() &&
+                       request.resource.data.userId == request.auth.uid &&
+                       request.resource.data.content != null &&
                        request.resource.data.content is string &&
                        request.resource.data.content.size() > 0 &&
                        request.resource.data.content.size() <= 5000 &&
@@ -122,25 +124,40 @@ service cloud.firestore {
                        request.resource.data.commentCount == 0 &&
                        request.resource.data.flagCount == 0;
       
-      // Update: Users can update comment count, flag count, and admins can update moderation status
-      allow update: if (request.resource.data.content == resource.data.content &&
-                        request.resource.data.createdAt == resource.data.createdAt &&
-                        request.resource.data.updatedAt != null &&
-                        ((request.resource.data.commentCount is number) ||
-                         (request.resource.data.flagCount is number) ||
-                         (request.resource.data.likeCount is number))) ||
-                       (isAdmin() && 
-                        request.resource.data.content == resource.data.content &&
-                        request.resource.data.createdAt == resource.data.createdAt &&
-                        request.resource.data.commentCount == resource.data.commentCount &&
-                        request.resource.data.flagCount == resource.data.flagCount &&
-                        request.resource.data.updatedAt != null &&
-                        (request.resource.data.moderated is bool ||
-                         request.resource.data.reason is string ||
-                         request.resource.data.moderatedAt is timestamp));
+      // Update rule handles 3 cases:
+      // 1. Counter updates (likes, comments, flags) - allowed for anyone (public/users)
+      // 2. Admin moderation - allowed for admins
+      // 3. Author edits - allowed for the creator of the confession
+      allow update: if 
+        // 1. Public/Counter updates (unchanged content)
+        (request.resource.data.content == resource.data.content &&
+         request.resource.data.title == resource.data.title &&
+         request.resource.data.userId == resource.data.userId &&
+         request.resource.data.createdAt == resource.data.createdAt &&
+         request.resource.data.updatedAt != null &&
+         ((request.resource.data.commentCount is number) ||
+          (request.resource.data.flagCount is number) ||
+          (request.resource.data.likeCount is number))) 
+        ||
+        // 2. Admin updates
+        (isAdmin() && 
+         request.resource.data.content == resource.data.content &&
+         request.resource.data.createdAt == resource.data.createdAt &&
+         (request.resource.data.moderated is bool ||
+          request.resource.data.reason is string ||
+          request.resource.data.moderatedAt is timestamp))
+        ||
+        // 3. Author updates (content/title only)
+        (isAuthenticated() && 
+         resource.data.userId == request.auth.uid &&
+         request.resource.data.userId == resource.data.userId &&
+         request.resource.data.createdAt == resource.data.createdAt &&
+         request.resource.data.commentCount == resource.data.commentCount &&
+         request.resource.data.flagCount == resource.data.flagCount &&
+         request.resource.data.updatedAt != null);
       
-      // Delete: Only admins can delete (moderation)
-      allow delete: if isAdmin();
+      // Delete: Admins or the Author can delete
+      allow delete: if isAdmin() || (isAuthenticated() && resource.data.userId == request.auth.uid);
     }
 
     // Comments Collection Rules (Comments and replies on confessions)

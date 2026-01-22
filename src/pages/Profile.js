@@ -7,9 +7,9 @@ import {
   signInWithEmailAndPassword,
 } from 'firebase/auth';
 import { doc, updateDoc } from 'firebase/firestore';
-import { useNavigate } from 'react-router-dom';
-import { MdComment } from 'react-icons/md';
-import { getConfessionsByUser } from '../services/confessionsService';
+import { useNavigate, useLocation } from 'react-router-dom';
+import { MdComment, MdEdit, MdDelete, MdClose, MdCheck } from 'react-icons/md';
+import { getConfessionsByUser, deleteConfession, updateConfession } from '../services/confessionsService';
 import Header from '../components/Header';
 import Sidebar from '../components/Sidebar';
 import '../styles/AdminLogin.css';
@@ -18,6 +18,7 @@ import '../styles/Confessions.css'; // Reusing confession card styles
 export default function Profile() {
   const { user } = useAuth();
   const navigate = useNavigate();
+  const location = useLocation();
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const [displayName, setDisplayName] = useState('');
   const [email, setEmail] = useState('');
@@ -34,6 +35,11 @@ export default function Profile() {
   const [userConfessions, setUserConfessions] = useState([]);
   const [confessionsLoading, setConfessionsLoading] = useState(false);
 
+  // Edit state
+  const [editingId, setEditingId] = useState(null);
+  const [editTitle, setEditTitle] = useState('');
+  const [editContent, setEditContent] = useState('');
+
   const toggleSidebar = () => setSidebarOpen(open => !open);
   const closeSidebar = () => setSidebarOpen(false);
 
@@ -45,11 +51,77 @@ export default function Profile() {
     }
   }, [user]);
 
+
+
+  // Handle tab switching from navigation state
+  useEffect(() => {
+    if (location.state?.activeTab) {
+      setActiveTab(location.state.activeTab);
+      // Clear the state so it doesn't persist on refresh if desired, 
+      // but for now simpler is fine or we can replace history.
+      window.history.replaceState({}, document.title);
+    }
+  }, [location.state]);
+
   useEffect(() => {
     if (user && activeTab === 'confessions') {
       fetchUserConfessions();
     }
   }, [user, activeTab]);
+
+  const handleDeleteConfession = async (e, confessionId) => {
+    e.stopPropagation(); // prevent navigation
+    if (window.confirm('Are you sure you want to delete this confession? This action cannot be undone.')) {
+      try {
+        await deleteConfession(confessionId);
+        // Remove from local state
+        setUserConfessions(prev => prev.filter(c => c.id !== confessionId));
+      } catch (error) {
+        console.error('Error deleting confession:', error);
+        alert('Failed to delete confession');
+      }
+    }
+  };
+
+  const handleStartEdit = (e, confession) => {
+    e.stopPropagation();
+    setEditingId(confession.id);
+    setEditTitle(confession.title || '');
+    setEditContent(confession.content || '');
+  };
+
+  const handleCancelEdit = (e) => {
+    if (e) e.stopPropagation();
+    setEditingId(null);
+    setEditTitle('');
+    setEditContent('');
+  };
+
+  const handleSaveEdit = async (e) => {
+    if (e) e.stopPropagation(); // although form submission propagates differently
+
+    if (!editContent.trim()) {
+      alert('Content cannot be empty');
+      return;
+    }
+
+    try {
+      await updateConfession(editingId, editContent, editTitle || null);
+
+      // Update local state
+      setUserConfessions(prev => prev.map(c => {
+        if (c.id === editingId) {
+          return { ...c, title: editTitle, content: editContent, updatedAt: new Date() };
+        }
+        return c;
+      }));
+
+      setEditingId(null);
+    } catch (error) {
+      console.error('Error updating confession:', error);
+      alert('Failed to update confession');
+    }
+  };
 
   const fetchUserConfessions = async () => {
     if (!user) return;
@@ -288,26 +360,83 @@ export default function Profile() {
                     <div
                       key={confession.id}
                       className="confession-card"
-                      onClick={() => handleViewConfession(confession.id)}
-                      style={{ cursor: 'pointer', border: '1px solid var(--border-color)', margin: 0 }}
+                      onClick={() => editingId !== confession.id && handleViewConfession(confession.id)}
+                      style={{
+                        cursor: editingId === confession.id ? 'default' : 'pointer',
+                        border: '1px solid var(--border-color)',
+                        margin: 0,
+                        position: 'relative'
+                      }}
                     >
-                      <div className="confession-header">
-                        <span className="timestamp">
-                          {formatDate(confession.createdAt)}
-                        </span>
-                      </div>
-                      {confession.title ? <h3 className="confession-title">{confession.title}</h3> : null}
-                      <p className="confession-content">
-                        {truncateText(confession.content, 150)}
-                      </p>
-                      <div className="confession-footer">
-                        <div className="confession-stats">
-                          <span className="comment-count">
-                            <MdComment /> {confession.commentCount || 0} comments
-                          </span>
+                      {editingId === confession.id ? (
+                        <div className="edit-confession-form" onClick={(e) => e.stopPropagation()}>
+                          <div style={{ marginBottom: '10px' }}>
+                            <input
+                              value={editTitle}
+                              onChange={(e) => setEditTitle(e.target.value)}
+                              placeholder="Title (optional)"
+                              style={{ width: '100%', padding: '8px', marginBottom: '8px', borderRadius: '4px', border: '1px solid #ddd' }}
+                            />
+                            <textarea
+                              value={editContent}
+                              onChange={(e) => setEditContent(e.target.value)}
+                              placeholder="Confession content"
+                              rows={4}
+                              style={{ width: '100%', padding: '8px', borderRadius: '4px', border: '1px solid #ddd', resize: 'vertical' }}
+                            />
+                          </div>
+                          <div style={{ display: 'flex', gap: '10px', justifyContent: 'flex-end' }}>
+                            <button
+                              onClick={handleSaveEdit}
+                              style={{ display: 'flex', alignItems: 'center', gap: '5px', padding: '6px 12px', background: '#10b981', color: 'white', border: 'none', borderRadius: '4px', cursor: 'pointer' }}
+                            >
+                              <MdCheck /> Save
+                            </button>
+                            <button
+                              onClick={handleCancelEdit}
+                              style={{ display: 'flex', alignItems: 'center', gap: '5px', padding: '6px 12px', background: '#ef4444', color: 'white', border: 'none', borderRadius: '4px', cursor: 'pointer' }}
+                            >
+                              <MdClose /> Cancel
+                            </button>
+                          </div>
                         </div>
-                        <span className="read-more" style={{ fontSize: '12px' }}>View Details →</span>
-                      </div>
+                      ) : (
+                        <>
+                          <div className="confession-header">
+                            <span className="timestamp">
+                              {formatDate(confession.createdAt)}
+                            </span>
+                            <div className="card-actions" style={{ display: 'flex', gap: '8px' }}>
+                              <button
+                                onClick={(e) => handleStartEdit(e, confession)}
+                                style={{ background: 'none', border: 'none', cursor: 'pointer', color: 'var(--text-secondary)', padding: 4 }}
+                                title="Edit"
+                              >
+                                <MdEdit size={18} />
+                              </button>
+                              <button
+                                onClick={(e) => handleDeleteConfession(e, confession.id)}
+                                style={{ background: 'none', border: 'none', cursor: 'pointer', color: '#ef4444', padding: 4 }}
+                                title="Delete"
+                              >
+                                <MdDelete size={18} />
+                              </button>
+                            </div>
+                          </div>
+                          {confession.title ? <h3 className="confession-title">{confession.title}</h3> : null}
+                          <p className="confession-content">
+                            {truncateText(confession.content, 150)}
+                          </p>
+                          <div className="confession-footer">
+                            <div className="confession-stats">
+                              <span className="comment-count">
+                                <MdComment /> {confession.commentCount || 0} comments
+                              </span>
+                            </div>
+                            <span className="read-more" style={{ fontSize: '12px' }}>View Details →</span>
+                          </div>
+                        </>
+                      )}
                     </div>
                   ))}
                 </div>
