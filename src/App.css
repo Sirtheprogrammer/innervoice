@@ -1199,15 +1199,24 @@ body {
 
   .update-footer {
     gap: 8px;
+    flex-wrap: nowrap;
+    align-items: center;
+    min-width: 0;
   }
 
   .update-date {
     font-size: 11px;
+    flex: 1;
+    min-width: 0;
+    overflow: hidden;
+    text-overflow: ellipsis;
   }
 
   .read-more-btn {
     font-size: 11px;
     padding: 3px 6px;
+    flex-shrink: 0;
+    margin-left: auto;
   }
 
   .updates-loading,

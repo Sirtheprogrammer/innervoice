@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { MdComment, MdShare, MdFavorite } from 'react-icons/md';
+import { MdComment, MdShare, MdFavorite, MdFavoriteBorder } from 'react-icons/md';
 import { getAllConfessions, createConfession, likeConfession } from '../services/confessionsService';
 import { useAuth } from '../context/AuthContext';
 import '../styles/Confessions.css';
@@ -17,6 +17,12 @@ export default function Confessions() {
   const [showForm, setShowForm] = useState(false);
   const [formContent, setFormContent] = useState('');
   const [formTitle, setFormTitle] = useState('');
+
+  // Track liked confessions (persisted in localStorage)
+  const [likedConfessions, setLikedConfessions] = useState(() => {
+    const saved = localStorage.getItem('likedConfessions');
+    return saved ? JSON.parse(saved) : [];
+  });
 
   // Fetch confessions on mount
   useEffect(() => {
@@ -149,8 +155,21 @@ export default function Confessions() {
 
   const handleLikeConfession = async (e, confessionId) => {
     e.stopPropagation();
+
+    // Check if already liked
+    const alreadyLiked = likedConfessions.includes(confessionId);
+    if (alreadyLiked) {
+      return; // Already liked, don't allow unlike for now
+    }
+
     try {
       await likeConfession(confessionId);
+
+      // Add to liked list and save to localStorage
+      const newLikedList = [...likedConfessions, confessionId];
+      setLikedConfessions(newLikedList);
+      localStorage.setItem('likedConfessions', JSON.stringify(newLikedList));
+
       // Optimistically update local state
       setConfessions(prev => prev.map(c => {
         if (c.id === confessionId) {
@@ -323,12 +342,12 @@ export default function Confessions() {
                   <button
                     className="like-btn"
                     onClick={(e) => handleLikeConfession(e, confession.id)}
-                    title="Like this confession"
+                    title={likedConfessions.includes(confession.id) ? 'Already liked' : 'Like this confession'}
                     style={{
                       background: 'none',
                       border: 'none',
-                      cursor: 'pointer',
-                      color: '#ef4444',
+                      cursor: likedConfessions.includes(confession.id) ? 'default' : 'pointer',
+                      color: likedConfessions.includes(confession.id) ? '#ef4444' : 'var(--text-secondary)',
                       display: 'flex',
                       alignItems: 'center',
                       gap: '4px',
@@ -336,7 +355,7 @@ export default function Confessions() {
                       padding: '4px 8px'
                     }}
                   >
-                    <MdFavorite /> {confession.likeCount || 0}
+                    {likedConfessions.includes(confession.id) ? <MdFavorite /> : <MdFavoriteBorder />} {confession.likeCount || 0}
                   </button>
                   <span className="comment-count">
                     <MdComment /> {confession.commentCount || 0} comments
