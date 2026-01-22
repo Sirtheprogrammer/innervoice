@@ -338,6 +338,12 @@ export default function ConfessionDetail() {
               type="submit"
               className="submit-btn"
               disabled={isSubmitting}
+              onClick={(e) => {
+                if (!user) {
+                  e.preventDefault();
+                  navigate('/login');
+                }
+              }}
             >
               {isSubmitting ? 'Posting...' : 'Post Comment'}
             </button>
@@ -382,7 +388,13 @@ export default function ConfessionDetail() {
                         </button>
                       ) : (
                         <button
-                          onClick={() => setReplyingTo(comment.id)}
+                          onClick={() => {
+                            if (!user) {
+                              navigate('/login');
+                              return;
+                            }
+                            setReplyingTo(comment.id);
+                          }}
                           className="action-btn"
                         >
                           Reply
