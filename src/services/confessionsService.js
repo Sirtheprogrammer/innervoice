@@ -73,6 +73,13 @@ export async function createConfession(content, title = null, userId = null) {
       throw new Error('Authentication required to create a confession');
     }
 
+    // Check if user is banned
+    const userRef = doc(db, 'users', userId);
+    const userSnap = await getDoc(userRef);
+    if (userSnap.exists() && userSnap.data().banned) {
+      throw new Error('You are banned from posting confessions.');
+    }
+
     validateConfessionData({ content, title });
 
     const docRef = await addDoc(collection(db, CONFESSIONS_COLLECTION), {

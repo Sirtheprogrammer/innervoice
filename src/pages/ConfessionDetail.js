@@ -33,7 +33,7 @@ export default function ConfessionDetail() {
   const [isLiking, setIsLiking] = useState(false);
   const [liked, setLiked] = useState(false);
   const [shareMessage, setShareMessage] = useState('');
-  const { user } = useAuth();
+  const { user, isBanned } = useAuth();
   const [shareModalOpen, setShareModalOpen] = useState(false);
 
   useEffect(() => {
@@ -321,14 +321,15 @@ export default function ConfessionDetail() {
         <h3>Add Your Comment</h3>
         {commentError && <div className="form-error">{commentError}</div>}
         {commentSuccess && <div className="form-success">{commentSuccess}</div>}
+        {isBanned && <div className="form-error" style={{ marginBottom: '1rem' }}>You are banned from commenting.</div>}
         <form onSubmit={handleAddComment} className="comment-form">
           <textarea
             value={commentContent}
             onChange={(e) => setCommentContent(e.target.value)}
-            placeholder="Write your comment here (max 2000 characters)..."
+            placeholder={isBanned ? "You are banned from commenting" : "Write your comment here (max 2000 characters)..."}
             maxLength="2000"
             rows="3"
-            disabled={isSubmitting}
+            disabled={isSubmitting || isBanned}
           />
           <div className="form-footer">
             <span className="char-count">
@@ -337,7 +338,7 @@ export default function ConfessionDetail() {
             <button
               type="submit"
               className="submit-btn"
-              disabled={isSubmitting}
+              disabled={isSubmitting || isBanned}
               onClick={(e) => {
                 if (!user) {
                   e.preventDefault();
@@ -391,6 +392,10 @@ export default function ConfessionDetail() {
                           onClick={() => {
                             if (!user) {
                               navigate('/login');
+                              return;
+                            }
+                            if (isBanned) {
+                              alert('You are banned from commenting.');
                               return;
                             }
                             setReplyingTo(comment.id);

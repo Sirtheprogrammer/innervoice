@@ -20,6 +20,7 @@ export function AuthProvider({ children }) {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const [userRole, setUserRole] = useState(null);
+  const [isBanned, setIsBanned] = useState(false);
 
   // Listen for auth state changes
   useEffect(() => {
@@ -29,17 +30,24 @@ export function AuthProvider({ children }) {
           try {
             const userDocRef = doc(db, 'users', currentUser.uid);
             const snap = await getDoc(userDocRef);
-            const role = snap.exists() ? snap.data().role : null;
+            if (snap.exists()) {
+              setUserRole(snap.data().role);
+              setIsBanned(snap.data().banned === true);
+            } else {
+              setUserRole(null);
+              setIsBanned(false);
+            }
             setUser(currentUser);
-            setUserRole(role);
           } catch (err) {
             setError(err.message);
             setUser(currentUser);
             setUserRole(null);
+            setIsBanned(false);
           }
         } else {
           setUser(null);
           setUserRole(null);
+          setIsBanned(false);
         }
         setLoading(false);
       })();
@@ -56,9 +64,18 @@ export function AuthProvider({ children }) {
       const uid = result.user.uid;
       const userRef = doc(db, 'users', uid);
       const snap = await getDoc(userRef);
-      const role = snap.exists() ? snap.data().role : null;
+      const data = snap.exists() ? snap.data() : {};
+      const role = data.role || null;
+      const banned = data.banned === true;
+
       setUserRole(role);
-      return { user: result.user, role };
+      setIsBanned(banned);
+
+      if (banned) {
+        throw new Error('This account has been banned.');
+      }
+
+      return { user: result.user, role, banned };
     } catch (err) {
       setError(err.message);
       throw err;
@@ -75,10 +92,12 @@ export function AuthProvider({ children }) {
       await setDoc(userRef, {
         email,
         role: 'user',
+        banned: false,
         createdAt: serverTimestamp(),
       });
       setUserRole('user');
-      return { user: result.user, role: 'user' };
+      setIsBanned(false);
+      return { user: result.user, role: 'user', banned: false };
     } catch (err) {
       setError(err.message);
       throw err;
@@ -95,17 +114,31 @@ export function AuthProvider({ children }) {
       const userRef = doc(db, 'users', uid);
       const snap = await getDoc(userRef);
       let role = 'user';
+      let banned = false;
+
       if (!snap.exists()) {
         await setDoc(userRef, {
           email: result.user.email || null,
           role,
+          banned: false,
           createdAt: serverTimestamp(),
         });
       } else {
-        role = snap.data().role || 'user';
+        const data = snap.data();
+        role = data.role || 'user';
+        banned = data.banned === true;
       }
+
+      if (banned) {
+        // Option specific to Google Auth: 
+        // We might want to just logout immediately if they are banned
+        // But throwing error here will be caught in UI
+        throw new Error('This account has been banned.');
+      }
+
       setUserRole(role);
-      return { user: result.user, role };
+      setIsBanned(banned);
+      return { user: result.user, role, banned };
     } catch (err) {
       setError(err.message);
       throw err;
@@ -116,6 +149,9 @@ export function AuthProvider({ children }) {
     setError(null);
     try {
       await signOut(auth);
+      setUser(null);
+      setUserRole(null);
+      setIsBanned(false);
     } catch (err) {
       setError(err.message);
       throw err;
@@ -132,6 +168,7 @@ export function AuthProvider({ children }) {
     signInWithGoogle,
     logout,
     userRole,
+    isBanned,
   };
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;

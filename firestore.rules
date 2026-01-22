@@ -17,6 +17,13 @@ service cloud.firestore {
       );
     }
 
+    // Helper function to check if user is NOT banned
+    function isNotBanned() {
+      return !isAuthenticated() || 
+             !exists(/databases/$(database)/documents/users/$(request.auth.uid)) ||
+             get(/databases/$(database)/documents/users/$(request.auth.uid)).data.banned != true;
+    }
+
     // Announcements Collection Rules
     match /announcements/{document=**} {
       // Read: Public can read (for carousel on homepage)
@@ -113,7 +120,7 @@ service cloud.firestore {
       allow read: if true;
       
       // Create: Authenticated users can create. Must set userId to own uid.
-      allow create: if isAuthenticated() &&
+      allow create: if isAuthenticated() && isNotBanned() &&
                        request.resource.data.userId == request.auth.uid &&
                        request.resource.data.content != null &&
                        request.resource.data.content is string &&
@@ -148,7 +155,7 @@ service cloud.firestore {
           request.resource.data.moderatedAt is timestamp))
         ||
         // 3. Author updates (content/title only)
-        (isAuthenticated() && 
+        (isAuthenticated() && isNotBanned() &&
          resource.data.userId == request.auth.uid &&
          request.resource.data.userId == resource.data.userId &&
          request.resource.data.createdAt == resource.data.createdAt &&
@@ -166,7 +173,8 @@ service cloud.firestore {
       allow read: if true;
       
       // Create: Anyone (no auth required) can create a comment
-      allow create: if request.resource.data.confessionId != null &&
+      allow create: if isNotBanned() &&
+                       request.resource.data.confessionId != null &&
                        request.resource.data.confessionId is string &&
                        request.resource.data.content != null &&
                        request.resource.data.content is string &&

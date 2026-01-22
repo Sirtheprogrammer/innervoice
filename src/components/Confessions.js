@@ -34,7 +34,7 @@ const calculateRankingScore = (confession) => {
 
 export default function Confessions({ searchQuery = '', sidebarOpen = false }) {
   const navigate = useNavigate();
-  const { user } = useAuth();
+  const { user, isBanned } = useAuth();
   const [confessions, setConfessions] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
@@ -91,6 +91,12 @@ export default function Confessions({ searchQuery = '', sidebarOpen = false }) {
       navigate('/login', { state: { from: '/', message: 'Please sign in to share your confession' } });
       return;
     }
+
+    if (isBanned) {
+      alert('You are banned from posting confessions.');
+      return;
+    }
+
     setShowForm(true);
   };
 
