@@ -52,6 +52,12 @@
   flex-direction: column;
 }
 
+[data-theme='dark'] .confession-detail {
+  background: #1e293b;
+  color: #f8fafc;
+  border-color: #334155;
+}
+
 .confession-detail-header {
   display: flex;
   justify-content: space-between;
@@ -142,6 +148,13 @@
   transition: all 0.2s;
 }
 
+[data-theme='dark'] .comment-form textarea,
+[data-theme='dark'] .reply-form textarea {
+  background-color: #0f172a;
+  color: #f8fafc;
+  border-color: #334155;
+}
+
 .comment-form textarea:focus {
   outline: none;
   border-color: #667eea;
@@ -196,6 +209,12 @@
   box-shadow: 0 4px 12px var(--shadow-color);
   border: 1px solid var(--border-color);
   animation: slideIn 0.5s ease;
+}
+
+[data-theme='dark'] .comments-section {
+  background: #1e293b;
+  color: #f8fafc;
+  border-color: #334155;
 }
 
 .comments-section h3 {

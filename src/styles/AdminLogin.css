@@ -1,9 +1,13 @@
 /* Admin Login Styles */
 :root {
-  --primary: #4f46e5; /* indigo */
-  --secondary: #7c3aed; /* violet */
-  --accent: #06b6d4; /* cyan */
-  --black: #1e293b; /* slate-800 */
+  --primary: #4f46e5;
+  /* indigo */
+  --secondary: #7c3aed;
+  /* violet */
+  --accent: #06b6d4;
+  /* cyan */
+  --black: #1e293b;
+  /* slate-800 */
   --white: #ffffff;
   --gray-light: #f8fafc;
   --gray-medium: #e2e8f0;
@@ -69,7 +73,7 @@
 }
 
 .form-group input {
-  padding: 12px;
+  padding: 11px;
   border: 1px solid rgba(0, 0, 0, 0.1);
   border-radius: 6px;
   font-size: 14px;

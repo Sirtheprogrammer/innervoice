@@ -20,6 +20,12 @@
     animation: slideDown 0.5s cubic-bezier(0.16, 1, 0.3, 1);
 }
 
+[data-theme='dark'] .confession-form-section {
+    background: #1e293b;
+    border-color: #334155;
+    color: #f8fafc;
+}
+
 @keyframes slideDown {
     from {
         opacity: 0;
@@ -81,6 +87,13 @@
     background: var(--bg-input);
     color: var(--text-primary);
     box-sizing: border-box;
+}
+
+[data-theme='dark'] .confession-form input,
+[data-theme='dark'] .confession-form textarea {
+    background-color: #0f172a;
+    color: #f8fafc;
+    border-color: #334155;
 }
 
 .confession-form input:focus,
@@ -170,6 +183,12 @@
     overflow: hidden;
 }
 
+[data-theme='dark'] .confession-card {
+    background: #1e293b;
+    border-color: #334155;
+    color: #f8fafc;
+}
+
 .confession-card:hover {
     transform: translateY(-10px) scale(1.02);
     box-shadow: 0 20px 40px var(--shadow-color-hover);
@@ -247,6 +266,11 @@
     padding: 6px 12px;
     border-radius: 20px;
     letter-spacing: 0.3px;
+}
+
+[data-theme='dark'] .timestamp {
+    background: #334155;
+    color: #e2e8f0;
 }
 
 .confession-title {

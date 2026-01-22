@@ -4,6 +4,7 @@ import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
 import './index.css';
 import App from './App';
 import { AuthProvider } from './context/AuthContext';
+import { ThemeProvider } from './context/ThemeContext';
 import AdminLogin from './pages/AdminLogin';
 import Register from './pages/Register';
 import AdminPanel from './pages/AdminPanel';
@@ -21,52 +22,54 @@ const root = ReactDOM.createRoot(document.getElementById('root'));
 root.render(
   <React.StrictMode>
     <Router>
-      <AuthProvider>
-        <Routes>
-          {/* Public routes */}
-          <Route path="/" element={<App />} />
-          <Route path="/confession/:confessionId" element={<ConfessionDetail />} />
-          <Route path="/contacts" element={<Contacts />} />
-          <Route path="/about" element={<About />} />
-          <Route path="/login" element={<AdminLogin />} />
-          <Route path="/profile" element={<Profile />} />
-          <Route path="/register" element={<Register />} />
+      <ThemeProvider>
+        <AuthProvider>
+          <Routes>
+            {/* Public routes */}
+            <Route path="/" element={<App />} />
+            <Route path="/confession/:confessionId" element={<ConfessionDetail />} />
+            <Route path="/contacts" element={<Contacts />} />
+            <Route path="/about" element={<About />} />
+            <Route path="/login" element={<AdminLogin />} />
+            <Route path="/profile" element={<Profile />} />
+            <Route path="/register" element={<Register />} />
 
-          {/* Protected admin routes */}
-          <Route
-            path="/admin"
-            element={
-              <ProtectedRoute>
-                <AdminPanel />
-              </ProtectedRoute>
-            }
-          />
-          <Route
-            path="/admin/announcements"
-            element={
-              <ProtectedRoute>
-                <AdminAnnouncements />
-              </ProtectedRoute>
-            }
-          />
-          <Route
-            path="/admin/updates"
-            element={
-              <ProtectedRoute>
-                <AdminUpdates />
-              </ProtectedRoute>
-            }
-          />
-          <Route
-            path="/admin/confessions"
-            element={
-              <ProtectedRoute>
-                <AdminConfessions />
-              </ProtectedRoute>
-            }
-          />
-        </Routes>
-      </AuthProvider>
+            {/* Protected admin routes */}
+            <Route
+              path="/admin"
+              element={
+                <ProtectedRoute>
+                  <AdminPanel />
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path="/admin/announcements"
+              element={
+                <ProtectedRoute>
+                  <AdminAnnouncements />
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path="/admin/updates"
+              element={
+                <ProtectedRoute>
+                  <AdminUpdates />
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path="/admin/confessions"
+              element={
+                <ProtectedRoute>
+                  <AdminConfessions />
+                </ProtectedRoute>
+              }
+            />
+          </Routes>
+        </AuthProvider>
+      </ThemeProvider>
     </Router>
   </React.StrictMode>
 );

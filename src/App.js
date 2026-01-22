@@ -6,9 +6,9 @@ import Confessions from './components/Confessions';
 import Sidebar from './components/Sidebar';
 import Footer from './components/Footer';
 
-import { ThemeProvider, useTheme } from './context/ThemeContext';
+import { useTheme } from './context/ThemeContext';
 
-function AppContent() {
+export default function App() {
   const { theme } = useTheme();
   const [sidebarOpen, setSidebarOpen] = React.useState(false);
 
@@ -38,13 +38,3 @@ function AppContent() {
     </div>
   );
 }
-
-function App() {
-  return (
-    <ThemeProvider>
-      <AppContent />
-    </ThemeProvider>
-  );
-}
-
-export default App;
