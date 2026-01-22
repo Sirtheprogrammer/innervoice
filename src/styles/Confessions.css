@@ -383,6 +383,61 @@
         font-size: 16px;
         padding: 16px;
     }
+
+    /* Fix footer layout on mobile */
+    .confession-footer {
+        flex-direction: column;
+        gap: 12px;
+        align-items: stretch;
+        padding: 12px 16px;
+    }
+
+    .confession-stats {
+        flex-wrap: wrap;
+        gap: 8px;
+        justify-content: flex-start;
+    }
+
+    .read-more {
+        display: inline-flex;
+        justify-content: center;
+        align-items: center;
+        align-self: center;
+        background: linear-gradient(135deg, #4f46e5 0%, #7c3aed 100%);
+        color: white;
+        padding: 8px 20px;
+        border-radius: 20px;
+        font-size: 13px;
+        font-weight: 600;
+        width: auto;
+        text-align: center;
+        box-shadow: 0 2px 8px rgba(79, 70, 229, 0.3);
+    }
+
+    .confession-card:hover .read-more {
+        transform: none;
+    }
+}
+
+/* Extra small screens */
+@media (max-width: 400px) {
+    .confession-stats {
+        gap: 6px;
+    }
+
+    .comment-count {
+        font-size: 12px;
+    }
+
+    .comment-count svg {
+        font-size: 14px;
+    }
+
+    .like-btn,
+    .share-btn {
+        font-size: 12px !important;
+        padding: 4px 6px !important;
+    }
 }
 
 /* Search Results Styles */
