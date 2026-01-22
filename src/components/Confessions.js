@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { MdComment, MdShare } from 'react-icons/md';
-import { getAllConfessions, createConfession } from '../services/confessionsService';
+import { MdComment, MdShare, MdFavorite } from 'react-icons/md';
+import { getAllConfessions, createConfession, likeConfession } from '../services/confessionsService';
 import { useAuth } from '../context/AuthContext';
 import '../styles/Confessions.css';
 
@@ -147,6 +147,22 @@ export default function Confessions() {
     }
   };
 
+  const handleLikeConfession = async (e, confessionId) => {
+    e.stopPropagation();
+    try {
+      await likeConfession(confessionId);
+      // Optimistically update local state
+      setConfessions(prev => prev.map(c => {
+        if (c.id === confessionId) {
+          return { ...c, likeCount: (c.likeCount || 0) + 1 };
+        }
+        return c;
+      }));
+    } catch (err) {
+      console.error('Error liking confession:', err);
+    }
+  };
+
   const truncateText = (text, maxLength = 200) => {
     if (text.length > maxLength) {
       return text.substring(0, maxLength) + '...';
@@ -160,17 +176,71 @@ export default function Confessions() {
 
   return (
     <div className="confessions-container">
-      {/* Form Section */}
-      <div className="confession-form-section">
-        {!showForm ? (
-          <button
-            className="show-form-btn"
-            onClick={handleShareClick}
+      {/* Fixed Share Button */}
+      {!showForm && (
+        <button
+          className="show-form-btn"
+          onClick={handleShareClick}
+          style={{
+            position: 'fixed',
+            top: '140px',
+            left: '50%',
+            transform: 'translateX(-50%)',
+            zIndex: 1200,
+            width: '350px',
+            maxWidth: 'calc(100% - 40px)',
+            padding: '16px 24px',
+            borderRadius: '20px',
+            boxShadow: '0 4px 12px rgba(0, 0, 0, 0.3)',
+            fontWeight: '600',
+            fontSize: '1rem',
+            background: 'var(--primary)',
+            color: 'white',
+            border: 'none',
+            cursor: 'pointer',
+            textAlign: 'center'
+          }}
+        >
+          + Share Your Confession
+        </button>
+      )}
+
+      {/* Form Modal Overlay */}
+      {showForm && (
+        <div
+          className="confession-form-overlay"
+          style={{
+            position: 'fixed',
+            top: 0,
+            left: 0,
+            right: 0,
+            bottom: 0,
+            background: 'rgba(0, 0, 0, 0.6)',
+            zIndex: 1001,
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            padding: '20px'
+          }}
+          onClick={() => {
+            setShowForm(false);
+            setFormContent('');
+            setFormError('');
+          }}
+        >
+          <div
+            className="confession-form"
+            onClick={(e) => e.stopPropagation()}
+            style={{
+              background: 'var(--surface)',
+              borderRadius: '12px',
+              padding: '24px',
+              maxWidth: '500px',
+              width: '100%',
+              maxHeight: '80vh',
+              overflowY: 'auto'
+            }}
           >
-            + Share Your Confession
-          </button>
-        ) : (
-          <div className="confession-form">
             <h2>Share Your Anonymous Confession</h2>
             {formError && <div className="form-error">{formError}</div>}
             {formSuccess && <div className="form-success">{formSuccess}</div>}
@@ -220,8 +290,8 @@ export default function Confessions() {
               </div>
             </form>
           </div>
-        )}
-      </div>
+        </div>
+      )}
 
       {/* Error Section */}
       {error && <div className="error-message">{error}</div>}
@@ -250,6 +320,24 @@ export default function Confessions() {
               </p>
               <div className="confession-footer">
                 <div className="confession-stats">
+                  <button
+                    className="like-btn"
+                    onClick={(e) => handleLikeConfession(e, confession.id)}
+                    title="Like this confession"
+                    style={{
+                      background: 'none',
+                      border: 'none',
+                      cursor: 'pointer',
+                      color: '#ef4444',
+                      display: 'flex',
+                      alignItems: 'center',
+                      gap: '4px',
+                      fontSize: '0.9rem',
+                      padding: '4px 8px'
+                    }}
+                  >
+                    <MdFavorite /> {confession.likeCount || 0}
+                  </button>
                   <span className="comment-count">
                     <MdComment /> {confession.commentCount || 0} comments
                   </span>
@@ -266,7 +354,12 @@ export default function Confessions() {
                       alignItems: 'center',
                       gap: '4px',
                       marginLeft: '15px',
-                      fontSize: '0.9rem'
+                      fontSize: '0.9rem',
+                      padding: '4px 8px',
+                      flexShrink: 0,
+                      transition: 'none',
+                      transform: 'none',
+                      whiteSpace: 'nowrap'
                     }}
                   >
                     <MdShare /> Share

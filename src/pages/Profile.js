@@ -40,6 +40,9 @@ export default function Profile() {
   const [editTitle, setEditTitle] = useState('');
   const [editContent, setEditContent] = useState('');
 
+  // Profile edit modal state
+  const [showEditModal, setShowEditModal] = useState(false);
+
   const toggleSidebar = () => setSidebarOpen(open => !open);
   const closeSidebar = () => setSidebarOpen(false);
 
@@ -296,42 +299,73 @@ export default function Profile() {
           </div>
 
           {activeTab === 'settings' ? (
-            <form onSubmit={handleSaveProfile} className="login-form">
-              <div className="form-group">
-                <label htmlFor="displayName">Display name</label>
-                <input id="displayName" value={displayName} onChange={(e) => setDisplayName(e.target.value)} />
+            <div className="profile-info-section" style={{ textAlign: 'center', padding: '30px 20px' }}>
+              {/* Profile Picture */}
+              <div style={{ marginBottom: '20px' }}>
+                {preview ? (
+                  <img
+                    src={preview}
+                    alt="Profile"
+                    style={{
+                      width: '120px',
+                      height: '120px',
+                      borderRadius: '50%',
+                      objectFit: 'cover',
+                      border: '4px solid var(--primary)',
+                      boxShadow: '0 4px 12px rgba(0,0,0,0.15)'
+                    }}
+                  />
+                ) : (
+                  <div style={{
+                    width: '120px',
+                    height: '120px',
+                    borderRadius: '50%',
+                    background: 'var(--primary)',
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    margin: '0 auto',
+                    fontSize: '48px',
+                    color: 'white',
+                    fontWeight: 'bold'
+                  }}>
+                    {(displayName || email || '?').charAt(0).toUpperCase()}
+                  </div>
+                )}
               </div>
 
-              <div className="form-group">
-                <label>Email</label>
-                <input value={email} disabled />
-              </div>
+              {/* User Name */}
+              <h2 style={{ margin: '0 0 8px 0', fontSize: '24px', fontWeight: '700', color: 'var(--text-primary)' }}>
+                {displayName || 'No name set'}
+              </h2>
 
-              <div className="form-group">
-                <label>Avatar</label>
-                {preview && <img src={preview} alt="preview" style={{ width: 72, height: 72, borderRadius: 8, objectFit: 'cover', marginBottom: 8 }} />}
-                <input type="file" accept="image/*" onChange={handleFileChange} />
-              </div>
+              {/* Email */}
+              <p style={{ margin: '0 0 24px 0', fontSize: '16px', color: 'var(--text-secondary)' }}>
+                {email}
+              </p>
 
-              <div className="form-group">
-                <label>Current password</label>
-                <input type="password" value={currentPassword} onChange={(e) => setCurrentPassword(e.target.value)} placeholder="Required to save changes" />
-              </div>
+              {/* Edit Profile Button */}
+              <button
+                onClick={() => setShowEditModal(true)}
+                style={{
+                  background: 'var(--primary)',
+                  color: 'white',
+                  border: 'none',
+                  padding: '12px 32px',
+                  borderRadius: '8px',
+                  fontSize: '16px',
+                  fontWeight: '600',
+                  cursor: 'pointer',
+                  display: 'inline-flex',
+                  alignItems: 'center',
+                  gap: '8px'
+                }}
+              >
+                <MdEdit /> Edit Your Profile
+              </button>
 
-              <div className="form-group">
-                <label>New password (optional)</label>
-                <input type="password" value={newPassword} onChange={(e) => setNewPassword(e.target.value)} placeholder="Leave blank to keep current" />
-              </div>
-
-              <div className="form-group">
-                <label>Confirm new password</label>
-                <input type="password" value={confirmPassword} onChange={(e) => setConfirmPassword(e.target.value)} placeholder="Confirm new password" />
-              </div>
-
-              {status && <div className="error-message" style={{ background: '#f3f3f3', color: '#111' }}>{status}</div>}
-
-              <button type="submit" className="login-btn" disabled={loading}>{loading ? 'Saving...' : 'Save Changes'}</button>
-            </form>
+              {status && <div className="error-message" style={{ background: '#f3f3f3', color: '#111', marginTop: '20px' }}>{status}</div>}
+            </div>
           ) : (
             <div className="user-confessions-list">
               {confessionsLoading ? (
@@ -445,6 +479,117 @@ export default function Profile() {
           )}
         </div>
       </div>
+
+      {/* Edit Profile Modal */}
+      {showEditModal && (
+        <div
+          className="profile-edit-modal-overlay"
+          style={{
+            position: 'fixed',
+            top: 0,
+            left: 0,
+            right: 0,
+            bottom: 0,
+            background: 'rgba(0, 0, 0, 0.6)',
+            zIndex: 2000,
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            padding: '20px'
+          }}
+          onClick={() => setShowEditModal(false)}
+        >
+          <div
+            className="profile-edit-modal"
+            onClick={(e) => e.stopPropagation()}
+            style={{
+              background: 'var(--bg-card)',
+              borderRadius: '16px',
+              padding: '32px',
+              maxWidth: '500px',
+              width: '100%',
+              maxHeight: '80vh',
+              overflowY: 'auto',
+              position: 'relative'
+            }}
+          >
+            <button
+              onClick={() => setShowEditModal(false)}
+              style={{
+                position: 'absolute',
+                top: '16px',
+                right: '16px',
+                background: 'none',
+                border: 'none',
+                fontSize: '24px',
+                cursor: 'pointer',
+                color: 'var(--text-secondary)'
+              }}
+            >
+              <MdClose />
+            </button>
+
+            <h2 style={{ marginTop: 0, marginBottom: '24px', color: 'var(--text-primary)' }}>Edit Your Profile</h2>
+
+            <form onSubmit={(e) => { handleSaveProfile(e); setShowEditModal(false); }} className="login-form">
+              <div className="form-group">
+                <label htmlFor="displayName">Display name</label>
+                <input id="displayName" value={displayName} onChange={(e) => setDisplayName(e.target.value)} />
+              </div>
+
+              <div className="form-group">
+                <label>Email</label>
+                <input value={email} disabled />
+              </div>
+
+              <div className="form-group">
+                <label>Avatar</label>
+                {preview && <img src={preview} alt="preview" style={{ width: 72, height: 72, borderRadius: 8, objectFit: 'cover', marginBottom: 8, display: 'block' }} />}
+                <input type="file" accept="image/*" onChange={handleFileChange} />
+              </div>
+
+              <div className="form-group">
+                <label>Current password</label>
+                <input type="password" value={currentPassword} onChange={(e) => setCurrentPassword(e.target.value)} placeholder="Required to save changes" />
+              </div>
+
+              <div className="form-group">
+                <label>New password (optional)</label>
+                <input type="password" value={newPassword} onChange={(e) => setNewPassword(e.target.value)} placeholder="Leave blank to keep current" />
+              </div>
+
+              <div className="form-group">
+                <label>Confirm new password</label>
+                <input type="password" value={confirmPassword} onChange={(e) => setConfirmPassword(e.target.value)} placeholder="Confirm new password" />
+              </div>
+
+              {status && <div className="error-message" style={{ background: '#f3f3f3', color: '#111' }}>{status}</div>}
+
+              <div style={{ display: 'flex', gap: '12px', marginTop: '20px' }}>
+                <button type="submit" className="login-btn" disabled={loading} style={{ flex: 1 }}>
+                  {loading ? 'Saving...' : 'Save Changes'}
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setShowEditModal(false)}
+                  style={{
+                    flex: 1,
+                    padding: '12px',
+                    border: '1px solid var(--border-color)',
+                    borderRadius: '8px',
+                    background: 'transparent',
+                    color: 'var(--text-primary)',
+                    cursor: 'pointer',
+                    fontWeight: '600'
+                  }}
+                >
+                  Cancel
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
     </>
   );
 }
