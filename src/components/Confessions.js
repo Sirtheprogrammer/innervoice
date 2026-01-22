@@ -232,7 +232,7 @@ export default function Confessions() {
             className="confession-form"
             onClick={(e) => e.stopPropagation()}
             style={{
-              background: 'var(--surface)',
+              background: 'var(--bg-card)',
               borderRadius: '12px',
               padding: '24px',
               maxWidth: '500px',
