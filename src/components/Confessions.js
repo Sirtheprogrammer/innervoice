@@ -6,6 +6,32 @@ import { useAuth } from '../context/AuthContext';
 import { fuzzySearch } from '../utils/fuzzySearch';
 import '../styles/Confessions.css';
 
+/**
+ * Calculate a ranking score that balances recency and engagement
+ * Newer posts get priority, but engagement (likes + comments) boosts the score
+ */
+const calculateRankingScore = (confession) => {
+  const now = Date.now();
+  const createdAt = confession.createdAt?.toDate?.() || new Date(confession.createdAt);
+  const ageInHours = (now - createdAt.getTime()) / (1000 * 60 * 60);
+
+  // Engagement score (likes count more than comments for quick engagement)
+  const likes = confession.likeCount || 0;
+  const comments = confession.commentCount || 0;
+  const engagementScore = (likes * 2) + (comments * 3);
+
+  // Recency score - newer posts get higher base score
+  // Posts decay over time but engagement can boost them back up
+  // Using logarithmic decay to keep very old engaged posts somewhat visible
+  const recencyScore = Math.max(0, 100 - Math.log(ageInHours + 1) * 15);
+
+  // Boost factor for very recent posts (within last 24 hours)
+  const recentBoost = ageInHours < 24 ? 50 : (ageInHours < 72 ? 20 : 0);
+
+  // Combined score: base recency + engagement boost + recent post boost
+  return recencyScore + (engagementScore * 2) + recentBoost;
+};
+
 export default function Confessions({ searchQuery = '' }) {
   const navigate = useNavigate();
   const { user } = useAuth();
@@ -19,12 +45,18 @@ export default function Confessions({ searchQuery = '' }) {
   const [formContent, setFormContent] = useState('');
   const [formTitle, setFormTitle] = useState('');
 
-  // Filter confessions based on search query using fuzzy search
+  // Sort and filter confessions with smart ranking
   const filteredConfessions = useMemo(() => {
+    // First, sort all confessions by ranking score
+    const sortedConfessions = [...confessions].sort((a, b) => {
+      return calculateRankingScore(b) - calculateRankingScore(a);
+    });
+
+    // Then apply search filter if there's a query
     if (!searchQuery || !searchQuery.trim()) {
-      return confessions;
+      return sortedConfessions;
     }
-    return fuzzySearch(confessions, searchQuery, ['title', 'content'], 0.3);
+    return fuzzySearch(sortedConfessions, searchQuery, ['title', 'content'], 0.3);
   }, [confessions, searchQuery]);
 
   // Track liked confessions (persisted in localStorage)
@@ -69,6 +101,16 @@ export default function Confessions({ searchQuery = '' }) {
 
     if (!user) {
       setFormError('You must be logged in to create a confession');
+      return;
+    }
+
+    if (!formTitle.trim()) {
+      setFormError('Please add a title for your confession');
+      return;
+    }
+
+    if (formTitle.length > 150) {
+      setFormError('Title cannot exceed 150 characters');
       return;
     }
 
@@ -277,9 +319,10 @@ export default function Confessions({ searchQuery = '' }) {
                 <input
                   value={formTitle}
                   onChange={(e) => setFormTitle(e.target.value)}
-                  placeholder="Optional title (max 150 characters)"
+                  placeholder="Title (required, max 150 characters)"
                   maxLength={150}
                   disabled={isCreating}
+                  required
                 />
               </div>
               <div className="form-group">
