@@ -12,7 +12,7 @@
 
   /* Theme Variables - Light Mode Defaults */
   --bg-body: linear-gradient(135deg, #4760b3 0%, #E0E7FF 50%, #99a1c2 100%);
-  --bg-header: linear-gradient(90deg, #150442 0%, #046997 100%);
+  --bg-header: linear-gradient(90deg, #042642 0%, #082583 100%);
   --bg-card: #eaf1f7;
   --bg-glass: rgba(255, 255, 255, 0.85);
   --bg-input: rgba(254, 255, 255, 0.8);
