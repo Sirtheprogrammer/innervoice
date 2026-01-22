@@ -47,15 +47,23 @@ function validateConfessionData(confession) {
 }
 
 /**
- * Create a new confession (anonymous)
+ * Create a new confession (requires authenticated user)
+ * @param {string} content - The confession content
+ * @param {string|null} title - Optional title
+ * @param {string} userId - The authenticated user's ID (stored for profile lookup, not displayed)
  */
-export async function createConfession(content, title = null) {
+export async function createConfession(content, title = null, userId = null) {
   try {
+    if (!userId) {
+      throw new Error('Authentication required to create a confession');
+    }
+
     validateConfessionData({ content, title });
 
     const docRef = await addDoc(collection(db, CONFESSIONS_COLLECTION), {
       content: content.trim(),
       title: title != null ? String(title).trim() : null,
+      userId, // Store userId for profile lookup (not displayed publicly)
       createdAt: serverTimestamp(),
       updatedAt: serverTimestamp(),
       commentCount: 0,
@@ -66,6 +74,7 @@ export async function createConfession(content, title = null) {
       id: docRef.id,
       content: content.trim(),
       title: title != null ? String(title).trim() : null,
+      userId,
       createdAt: new Date(),
       commentCount: 0,
       flagCount: 0,
@@ -96,6 +105,37 @@ export async function getAllConfessions(pageSize = 20) {
     }));
   } catch (error) {
     console.error('Error fetching confessions:', error);
+    throw error;
+  }
+}
+
+/**
+ * Get confessions by a specific user ID (for profile page)
+ * @param {string} userId - The user's ID
+ * @param {number} pageSize - Number of confessions to fetch
+ */
+export async function getConfessionsByUser(userId, pageSize = 50) {
+  try {
+    if (!userId) {
+      throw new Error('User ID is required');
+    }
+
+    const q = query(
+      collection(db, CONFESSIONS_COLLECTION),
+      where('userId', '==', userId),
+      orderBy('createdAt', 'desc'),
+      limit(pageSize)
+    );
+
+    const querySnapshot = await getDocs(q);
+    return querySnapshot.docs.map((doc) => ({
+      id: doc.id,
+      ...doc.data(),
+      createdAt: doc.data().createdAt?.toDate?.() || new Date(),
+      updatedAt: doc.data().updatedAt?.toDate?.() || new Date(),
+    }));
+  } catch (error) {
+    console.error('Error fetching user confessions:', error);
     throw error;
   }
 }
@@ -206,6 +246,28 @@ export async function flagConfession(confessionId) {
 }
 
 /**
+ * Update a confession (content and title)
+ * @param {string} confessionId - ID of the confession
+ * @param {string} content - New content
+ * @param {string|null} title - New title
+ */
+export async function updateConfession(confessionId, content, title = null) {
+  try {
+    validateConfessionData({ content, title });
+
+    const docRef = doc(db, CONFESSIONS_COLLECTION, confessionId);
+    await updateDoc(docRef, {
+      content: content.trim(),
+      title: title != null ? String(title).trim() : null,
+      updatedAt: serverTimestamp(),
+    });
+  } catch (error) {
+    console.error('Error updating confession:', error);
+    throw error;
+  }
+}
+
+/**
  * Moderate a confession (mark as approved/rejected with reason)
  * @param {string} confessionId - ID of the confession
  * @param {boolean} approved - Whether to approve or reject
@@ -260,6 +322,7 @@ const confessionsService = {
   deleteConfession,
   flagConfession,
   moderateConfession,
+  updateConfession,
   getFlaggedConfessions,
 };
 

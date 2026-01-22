@@ -2,10 +2,12 @@ import React, { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { MdComment } from 'react-icons/md';
 import { getAllConfessions, createConfession } from '../services/confessionsService';
+import { useAuth } from '../context/AuthContext';
 import '../styles/Confessions.css';
 
 export default function Confessions() {
   const navigate = useNavigate();
+  const { user } = useAuth();
   const [confessions, setConfessions] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
@@ -35,10 +37,25 @@ export default function Confessions() {
     }
   };
 
+  // Handle click on "Share Your Confession" button
+  const handleShareClick = () => {
+    if (!user) {
+      // Redirect to login if not authenticated
+      navigate('/login', { state: { from: '/', message: 'Please sign in to share your confession' } });
+      return;
+    }
+    setShowForm(true);
+  };
+
   const handleCreateConfession = async (e) => {
     e.preventDefault();
     setFormError('');
     setFormSuccess('');
+
+    if (!user) {
+      setFormError('You must be logged in to create a confession');
+      return;
+    }
 
     if (!formContent.trim()) {
       setFormError('Please write a confession');
@@ -52,12 +69,12 @@ export default function Confessions() {
 
     setIsCreating(true);
     try {
-      await createConfession(formContent, formTitle || null);
+      await createConfession(formContent, formTitle || null, user.uid);
       setFormContent('');
       setFormTitle('');
       setFormSuccess('Your confession has been posted!');
       setShowForm(false);
-      
+
       // Refresh the confessions list
       await fetchConfessions();
 
@@ -118,7 +135,7 @@ export default function Confessions() {
         {!showForm ? (
           <button
             className="show-form-btn"
-            onClick={() => setShowForm(true)}
+            onClick={handleShareClick}
           >
             + Share Your Confession
           </button>
