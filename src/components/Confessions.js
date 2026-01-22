@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { MdComment } from 'react-icons/md';
+import { MdComment, MdShare } from 'react-icons/md';
 import { getAllConfessions, createConfession } from '../services/confessionsService';
 import { useAuth } from '../context/AuthContext';
 import '../styles/Confessions.css';
@@ -117,6 +117,36 @@ export default function Confessions() {
     navigate(`/confession/${confessionId}`);
   };
 
+  const handleShareConfession = async (e, confession) => {
+    e.stopPropagation();
+
+    const url = `${window.location.origin}/confession/${confession.id}`;
+    const text = confession.title ? `${confession.title}\n${confession.content}` : confession.content;
+    const truncatedText = truncateText(text, 100);
+
+    const shareData = {
+      title: 'Confession',
+      text: `Someone confessed: "${truncatedText}"... Read more:`,
+      url: url
+    };
+
+    if (navigator.share) {
+      try {
+        await navigator.share(shareData);
+      } catch (err) {
+        // User cancelled or error
+        console.log('Share skipped/cancelled');
+      }
+    } else {
+      try {
+        await navigator.clipboard.writeText(url);
+        alert('Link copied to clipboard!');
+      } catch (err) {
+        console.error('Failed to copy link', err);
+      }
+    }
+  };
+
   const truncateText = (text, maxLength = 200) => {
     if (text.length > maxLength) {
       return text.substring(0, maxLength) + '...';
@@ -223,6 +253,24 @@ export default function Confessions() {
                   <span className="comment-count">
                     <MdComment /> {confession.commentCount || 0} comments
                   </span>
+                  <button
+                    className="share-btn"
+                    onClick={(e) => handleShareConfession(e, confession)}
+                    title="Share this confession"
+                    style={{
+                      background: 'none',
+                      border: 'none',
+                      cursor: 'pointer',
+                      color: 'var(--text-secondary)',
+                      display: 'flex',
+                      alignItems: 'center',
+                      gap: '4px',
+                      marginLeft: '15px',
+                      fontSize: '0.9rem'
+                    }}
+                  >
+                    <MdShare /> Share
+                  </button>
                 </div>
                 <span className="read-more">Read more →</span>
               </div>
