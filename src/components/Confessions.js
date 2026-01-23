@@ -5,6 +5,7 @@ import { getAllConfessions, createConfession, likeConfession } from '../services
 import { getCategories } from '../services/categoriesService';
 import Loader from './Loader';
 import { useAuth } from '../context/AuthContext';
+import { useTheme } from '../context/ThemeContext';
 import { fuzzySearch } from '../utils/fuzzySearch';
 import '../styles/Confessions.css';
 
@@ -37,6 +38,7 @@ const calculateRankingScore = (confession) => {
 export default function Confessions({ searchQuery = '', sidebarOpen = false }) {
   const navigate = useNavigate();
   const { user, isBanned } = useAuth();
+  const { theme } = useTheme();
   const [confessions, setConfessions] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
@@ -306,7 +308,7 @@ export default function Confessions({ searchQuery = '', sidebarOpen = false }) {
   }
 
   return (
-    <div className="confessions-container">
+    <div className="confessions-container" data-theme={theme || 'light'}>
       {/* Fixed Share Button - hide when sidebar is open */}
       {!showForm && !sidebarOpen && (
         <button

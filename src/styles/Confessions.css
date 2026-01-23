@@ -185,10 +185,17 @@
     overflow: hidden;
 }
 
-[data-theme='dark'] .confession-card {
-    background: #1e293b;
+[data-theme='dark'] .confession-card,
+.confessions-container[data-theme='dark'] .confession-card {
+    background: #0f172a;
+    /* Darker background to match timestamp preference */
     border-color: #334155;
     color: #f8fafc;
+}
+
+[data-theme='dark'] .confession-header,
+.confessions-container[data-theme='dark'] .confession-header {
+    background: #0f172a;
 }
 
 .confession-card:hover {
