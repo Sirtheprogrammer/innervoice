@@ -370,7 +370,7 @@ export default function ConfessionDetail() {
                 <div className="comment">
                   <img
                     className="avatar"
-                    src={`https://avatars.dicebear.com/api/identicon/${comment.id}.svg`}
+                    src={`https://api.dicebear.com/9.x/lorelei-neutral/svg`}
                     alt="avatar"
                   />
                   <div className="comment-body">

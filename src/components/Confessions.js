@@ -3,6 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import { MdComment, MdShare, MdFavorite, MdFavoriteBorder } from 'react-icons/md';
 import { getAllConfessions, createConfession, likeConfession } from '../services/confessionsService';
 import { getCategories } from '../services/categoriesService';
+import Loader from './Loader';
 import { useAuth } from '../context/AuthContext';
 import { fuzzySearch } from '../utils/fuzzySearch';
 import '../styles/Confessions.css';
@@ -301,7 +302,7 @@ export default function Confessions({ searchQuery = '', sidebarOpen = false }) {
   };
 
   if (loading && confessions.length === 0) {
-    return <div className="confessions-container"><div className="loading">Loading confessions...</div></div>;
+    return <div className="confessions-container"><Loader /></div>;
   }
 
   return (
