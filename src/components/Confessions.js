@@ -312,6 +312,25 @@ export default function Confessions({ searchQuery = '', sidebarOpen = false }) {
         <button
           className="show-form-btn"
           onClick={handleShareClick}
+          style={{
+            position: 'fixed',
+            top: '140px',
+            left: '50%',
+            transform: 'translateX(-50%)',
+            zIndex: 1050,
+            width: '350px',
+            maxWidth: 'calc(100% - 40px)',
+            padding: '16px 24px',
+            borderRadius: '20px',
+            boxShadow: '0 4px 12px rgba(0, 0, 0, 0.3)',
+            fontWeight: '600',
+            fontSize: '1rem',
+            background: 'var(--primary)',
+            color: 'white',
+            border: 'none',
+            cursor: 'pointer',
+            textAlign: 'center'
+          }}
         >
           + Share Your Confession
         </button>
