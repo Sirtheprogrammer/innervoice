@@ -11,6 +11,7 @@ import AdminPanel from './pages/AdminPanel';
 import AdminAnnouncements from './pages/AdminAnnouncements';
 import AdminUpdates from './pages/AdminUpdates';
 import AdminConfessions from './pages/AdminConfessions';
+import AdminCategories from './pages/AdminCategories';
 import ConfessionDetail from './pages/ConfessionDetail';
 import Contacts from './pages/Contacts';
 import About from './pages/About';
@@ -64,6 +65,14 @@ root.render(
               element={
                 <ProtectedRoute>
                   <AdminConfessions />
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path="/admin/categories"
+              element={
+                <ProtectedRoute>
+                  <AdminCategories />
                 </ProtectedRoute>
               }
             />

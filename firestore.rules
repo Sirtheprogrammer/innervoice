@@ -129,7 +129,9 @@ service cloud.firestore {
                        request.resource.data.createdAt != null &&
                        request.resource.data.updatedAt != null &&
                        request.resource.data.commentCount == 0 &&
-                       request.resource.data.flagCount == 0;
+                       request.resource.data.flagCount == 0 &&
+                       (request.resource.data.categoryId == null || request.resource.data.categoryId is string) &&
+                       (request.resource.data.categoryName == null || request.resource.data.categoryName is string);
       
       // Update rule handles 3 cases:
       // 1. Counter updates (likes, comments, flags) - allowed for anyone (public/users)
@@ -144,7 +146,9 @@ service cloud.firestore {
          request.resource.data.updatedAt != null &&
          ((request.resource.data.commentCount is number) ||
           (request.resource.data.flagCount is number) ||
-          (request.resource.data.likeCount is number))) 
+          (request.resource.data.likeCount is number) ||
+          (request.resource.data.categoryId == resource.data.categoryId) ||
+          (request.resource.data.categoryName == resource.data.categoryName))) 
         ||
         // 2. Admin updates
         (isAdmin() && 
@@ -245,6 +249,11 @@ service cloud.firestore {
 
       // Delete: only admins may delete user docs (managed by super-admin)
       allow delete: if isAdmin();
+    }
+    // Categories Collection
+    match /categories/{categoryId} {
+      allow read: if true;
+      allow write: if isAdmin();
     }
   }
 }

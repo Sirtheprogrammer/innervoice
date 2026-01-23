@@ -1,6 +1,7 @@
-import React from 'react';
-import { Link, useLocation } from 'react-router-dom';
-import { MdHome, MdCampaign, MdRefresh, MdComment, MdClose } from 'react-icons/md';
+import React, { useState } from 'react';
+import { Link, useLocation, useNavigate } from 'react-router-dom';
+import { MdHome, MdCampaign, MdRefresh, MdComment, MdClose, MdCategory, MdLogout } from 'react-icons/md';
+import { useAuth } from '../context/AuthContext';
 import '../styles/AdminPanel.css';
 
 const navigationItems = [
@@ -8,10 +9,25 @@ const navigationItems = [
   { path: '/admin/announcements', label: 'Announcements', icon: MdCampaign },
   { path: '/admin/updates', label: 'Updates', icon: MdRefresh },
   { path: '/admin/confessions', label: 'Confessions', icon: MdComment },
+  { path: '/admin/categories', label: 'Categories', icon: MdCategory },
 ];
 
 export default function AdminSidebar({ isOpen, onClose }) {
   const location = useLocation();
+  const navigate = useNavigate();
+  const { logout } = useAuth();
+  const [isLoggingOut, setIsLoggingOut] = useState(false);
+
+  const handleLogout = async () => {
+    try {
+      setIsLoggingOut(true);
+      await logout();
+      navigate('/login');
+    } catch (error) {
+      console.error('Failed to log out', error);
+      setIsLoggingOut(false);
+    }
+  };
 
   return (
     <>
@@ -55,6 +71,17 @@ export default function AdminSidebar({ isOpen, onClose }) {
                 </li>
               );
             })}
+            <li className="admin-sidebar-divider"></li>
+            <li>
+              <button
+                onClick={handleLogout}
+                className="admin-sidebar-link start-logout-btn"
+                disabled={isLoggingOut}
+              >
+                <MdLogout className="admin-sidebar-icon" />
+                <span>{isLoggingOut ? 'Logging out...' : 'Logout'}</span>
+              </button>
+            </li>
           </ul>
         </nav>
       </aside>

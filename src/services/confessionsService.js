@@ -65,9 +65,11 @@ function validateConfessionData(confession) {
  * Create a new confession (requires authenticated user)
  * @param {string} content - The confession content
  * @param {string|null} title - Optional title
- * @param {string} userId - The authenticated user's ID (stored for profile lookup, not displayed)
+ * @param {string} userId - The authenticated user's ID
+ * @param {string} categoryId - Optional category ID
+ * @param {string} categoryName - Optional category name
  */
-export async function createConfession(content, title = null, userId = null) {
+export async function createConfession(content, title = null, userId = null, categoryId = null, categoryName = null) {
   try {
     if (!userId) {
       throw new Error('Authentication required to create a confession');
@@ -82,7 +84,7 @@ export async function createConfession(content, title = null, userId = null) {
 
     validateConfessionData({ content, title });
 
-    const docRef = await addDoc(collection(db, CONFESSIONS_COLLECTION), {
+    const confessionData = {
       content: content.trim(),
       title: title != null ? String(title).trim() : null,
       userId, // Store userId for profile lookup (not displayed publicly)
@@ -90,16 +92,19 @@ export async function createConfession(content, title = null, userId = null) {
       updatedAt: serverTimestamp(),
       commentCount: 0,
       flagCount: 0,
-    });
+    };
+
+    if (categoryId) {
+      confessionData.categoryId = categoryId;
+      confessionData.categoryName = categoryName;
+    }
+
+    const docRef = await addDoc(collection(db, CONFESSIONS_COLLECTION), confessionData);
 
     return {
       id: docRef.id,
-      content: content.trim(),
-      title: title != null ? String(title).trim() : null,
-      userId,
+      ...confessionData,
       createdAt: new Date(),
-      commentCount: 0,
-      flagCount: 0,
     };
   } catch (error) {
     console.error('Error creating confession:', error);
@@ -108,15 +113,28 @@ export async function createConfession(content, title = null, userId = null) {
 }
 
 /**
- * Get all confessions, ordered by newest first
+ * Get all confessions, ordered by newest first, optionally filtered by category
  */
-export async function getAllConfessions(pageSize = 20) {
+export async function getAllConfessions(pageSize = 20, categoryId = null) {
   try {
-    const q = query(
-      collection(db, CONFESSIONS_COLLECTION),
-      orderBy('createdAt', 'desc'),
-      limit(pageSize)
-    );
+    let q;
+
+    if (categoryId) {
+      // Note: This requires a composite index on Firestore: categoryId (Asc) + createdAt (Desc)
+      // If index is missing, Firestore will throw an error with a link to create it.
+      q = query(
+        collection(db, CONFESSIONS_COLLECTION),
+        where('categoryId', '==', categoryId),
+        orderBy('createdAt', 'desc'),
+        limit(pageSize)
+      );
+    } else {
+      q = query(
+        collection(db, CONFESSIONS_COLLECTION),
+        orderBy('createdAt', 'desc'),
+        limit(pageSize)
+      );
+    }
 
     const querySnapshot = await getDocs(q);
     return querySnapshot.docs.map((doc) => ({

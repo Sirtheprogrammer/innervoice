@@ -2,6 +2,7 @@ import React, { useEffect, useState, useMemo } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { MdComment, MdShare, MdFavorite, MdFavoriteBorder } from 'react-icons/md';
 import { getAllConfessions, createConfession, likeConfession } from '../services/confessionsService';
+import { getCategories } from '../services/categoriesService';
 import { useAuth } from '../context/AuthContext';
 import { fuzzySearch } from '../utils/fuzzySearch';
 import '../styles/Confessions.css';
@@ -44,6 +45,9 @@ export default function Confessions({ searchQuery = '', sidebarOpen = false }) {
   const [showForm, setShowForm] = useState(false);
   const [formContent, setFormContent] = useState('');
   const [formTitle, setFormTitle] = useState('');
+  const [categories, setCategories] = useState([]);
+  const [formCategory, setFormCategory] = useState('');
+  const [activeCategory, setActiveCategory] = useState('all');
 
   // Sort and filter confessions with smart ranking
   const filteredConfessions = useMemo(() => {
@@ -68,13 +72,35 @@ export default function Confessions({ searchQuery = '', sidebarOpen = false }) {
   // Fetch confessions on mount
   useEffect(() => {
     fetchConfessions();
+    fetchCategories();
   }, []);
+
+  const fetchCategories = async () => {
+    try {
+      const data = await getCategories();
+      setCategories(data);
+    } catch (err) {
+      console.error('Error fetching categories:', err);
+    }
+  };
+
+  useEffect(() => {
+    fetchConfessions();
+  }, [activeCategory]); // Re-fetch when category changes
 
   const fetchConfessions = async () => {
     setLoading(true);
     setError('');
     try {
-      const data = await getAllConfessions(50);
+      // Pass null if 'all', or the categoryId otherwise. 'other' logic might need checking in service or here.
+      // For now assuming 'other' is treating as no category or specific id? 
+      // Actually my plan said "optional categoryId". If user selects "Other", is that an ID? 
+      // The form saves "Other" as categoryName and null as ID for "other".
+      // Wait, if I want to filter by "Other", I need to handle that. 
+      // For simplicity, let's filter by valid category IDs first.
+
+      const filterId = activeCategory === 'all' ? null : activeCategory;
+      const data = await getAllConfessions(50, filterId);
       setConfessions(data);
     } catch (err) {
       console.error('Error fetching confessions:', err);
@@ -130,11 +156,25 @@ export default function Confessions({ searchQuery = '', sidebarOpen = false }) {
       return;
     }
 
+    if (!formCategory) {
+      setFormError('Please select a category');
+      return;
+    }
+
     setIsCreating(true);
     try {
-      await createConfession(formContent, formTitle || null, user.uid);
+      let categoryName = null;
+      if (formCategory === 'other') {
+        categoryName = 'Other';
+      } else {
+        const cat = categories.find(c => c.id === formCategory);
+        categoryName = cat ? cat.name : 'Unknown';
+      }
+
+      await createConfession(formContent, formTitle || null, user.uid, formCategory === 'other' ? null : formCategory, categoryName);
       setFormContent('');
       setFormTitle('');
+      setFormCategory('');
       setFormSuccess('Your confession has been posted!');
       setShowForm(false);
 
@@ -295,6 +335,25 @@ export default function Confessions({ searchQuery = '', sidebarOpen = false }) {
         </button>
       )}
 
+      {/* Category Filter */}
+      <div className="category-filter-container">
+        <button
+          className={`category-chip ${activeCategory === 'all' ? 'active' : ''}`}
+          onClick={() => setActiveCategory('all')}
+        >
+          All
+        </button>
+        {categories.map(cat => (
+          <button
+            key={cat.id}
+            className={`category-chip ${activeCategory === cat.id ? 'active' : ''}`}
+            onClick={() => setActiveCategory(cat.id)}
+          >
+            {cat.name}
+          </button>
+        ))}
+      </div>
+
       {/* Form Modal Overlay */}
       {showForm && (
         <div
@@ -344,6 +403,20 @@ export default function Confessions({ searchQuery = '', sidebarOpen = false }) {
                   disabled={isCreating}
                   required
                 />
+              </div>
+              <div className="form-group">
+                <select
+                  value={formCategory}
+                  onChange={(e) => setFormCategory(e.target.value)}
+                  disabled={isCreating}
+                  required
+                >
+                  <option value="">Select a Category</option>
+                  {categories.map(cat => (
+                    <option key={cat.id} value={cat.id}>{cat.name}</option>
+                  ))}
+                  <option value="other">Other</option>
+                </select>
               </div>
               <div className="form-group">
                 <textarea
