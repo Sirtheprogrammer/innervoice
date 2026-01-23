@@ -238,9 +238,10 @@ service cloud.firestore {
                     && request.resource.data.email is string
                     && request.resource.data.createdAt != null;
 
-      // Update: user can update their profile but cannot change `role`
-      allow update: if request.auth != null && request.auth.uid == userId
-                    && request.resource.data.role == resource.data.role;
+      // Update: user can update their profile but cannot change `role`, admins can update anything
+      allow update: if (request.auth != null && request.auth.uid == userId
+                    && request.resource.data.role == resource.data.role)
+                    || isAdmin();
 
       // Delete: only admins may delete user docs (managed by super-admin)
       allow delete: if isAdmin();

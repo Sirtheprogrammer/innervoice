@@ -219,23 +219,37 @@ export default function Confessions({ searchQuery = '', sidebarOpen = false }) {
       return; // Already liked, don't allow unlike for now
     }
 
+    // 1. Optimistically update UI state immediately
+    const prevLikedConfessions = [...likedConfessions];
+    // Add to liked list and save to localStorage immediately
+    const newLikedList = [...likedConfessions, confessionId];
+    setLikedConfessions(newLikedList);
+    localStorage.setItem('likedConfessions', JSON.stringify(newLikedList));
+
+    // Optimistically update confession like count
+    setConfessions(prev => prev.map(c => {
+      if (c.id === confessionId) {
+        return { ...c, likeCount: (c.likeCount || 0) + 1 };
+      }
+      return c;
+    }));
+
     try {
+      // 2. Perform API call
       await likeConfession(confessionId);
+    } catch (err) {
+      console.error('Error liking confession:', err);
 
-      // Add to liked list and save to localStorage
-      const newLikedList = [...likedConfessions, confessionId];
-      setLikedConfessions(newLikedList);
-      localStorage.setItem('likedConfessions', JSON.stringify(newLikedList));
+      // 3. Revert state if API fails
+      setLikedConfessions(prevLikedConfessions);
+      localStorage.setItem('likedConfessions', JSON.stringify(prevLikedConfessions));
 
-      // Optimistically update local state
       setConfessions(prev => prev.map(c => {
         if (c.id === confessionId) {
-          return { ...c, likeCount: (c.likeCount || 0) + 1 };
+          return { ...c, likeCount: Math.max(0, (c.likeCount || 0) - 1) };
         }
         return c;
       }));
-    } catch (err) {
-      console.error('Error liking confession:', err);
     }
   };
 

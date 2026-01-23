@@ -235,27 +235,32 @@ export default function ConfessionDetail() {
                 className="action-btn like-btn"
                 onClick={async (e) => {
                   e.stopPropagation();
-                  if (isLiking) return;
+                  // Check if already liked (prevent double like)
+                  if (liked) return;
                   if (!user) {
-                    // require login to like
                     window.location.href = '/login';
                     return;
                   }
+
+                  // 1. Optimistically update UI immediately
+                  setLiked(true);
+                  setConfession((prev) => ({ ...prev, likeCount: (prev.likeCount || 0) + 1 }));
+
+                  const key = `liked_confessions_${user.uid}`;
+                  const stored = JSON.parse(localStorage.getItem(key) || '[]');
+                  const newStored = [...stored, confessionId];
+                  localStorage.setItem(key, JSON.stringify(newStored));
+
                   try {
-                    if (liked) return;
-                    setIsLiking(true);
+                    // 2. Perform API call
                     await likeConfession(confessionId);
-                    // update local state
-                    setConfession((prev) => ({ ...prev, likeCount: (prev.likeCount || 0) + 1 }));
-                    const key = `liked_confessions_${user.uid}`;
-                    const stored = JSON.parse(localStorage.getItem(key) || '[]');
-                    stored.push(confessionId);
-                    localStorage.setItem(key, JSON.stringify(stored));
-                    setLiked(true);
                   } catch (err) {
                     console.error('Like failed', err);
-                  } finally {
-                    setIsLiking(false);
+
+                    // 3. Revert state if API fails
+                    setLiked(false);
+                    setConfession((prev) => ({ ...prev, likeCount: Math.max(0, (prev.likeCount || 0) - 1) }));
+                    localStorage.setItem(key, JSON.stringify(stored));
                   }
                 }}
                 title={liked ? 'You liked this' : 'Like'}
