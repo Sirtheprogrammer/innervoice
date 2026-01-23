@@ -14,6 +14,7 @@ import {
   createComment,
 } from '../services/commentsService';
 import '../styles/ConfessionDetail.css';
+import { useTheme } from '../context/ThemeContext';
 
 export default function ConfessionDetail() {
   const { confessionId } = useParams();
@@ -34,6 +35,7 @@ export default function ConfessionDetail() {
   const [liked, setLiked] = useState(false);
   const [shareMessage, setShareMessage] = useState('');
   const { user, isBanned } = useAuth();
+  const { theme } = useTheme();
   const [shareModalOpen, setShareModalOpen] = useState(false);
 
   useEffect(() => {
@@ -215,7 +217,7 @@ export default function ConfessionDetail() {
   }
 
   return (
-    <div className="confession-detail-container">
+    <div className="confession-detail-container" data-theme={theme || 'light'}>
       <button onClick={() => navigate('/')} className="back-btn">
         ← Back to Confessions
       </button>

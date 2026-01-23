@@ -135,6 +135,8 @@
 
 .comment-form textarea {
   width: 100%;
+  box-sizing: border-box;
+  /* Ensures padding is included in width */
   padding: 12px;
   border: 1px solid var(--border-color);
   border-radius: 8px;
@@ -948,4 +950,81 @@
   .reply-meta {
     font-size: 10px;
   }
+}
+
+/* Dark Theme Overrides */
+[data-theme='dark'] .confession-detail-header .timestamp,
+.confession-detail-container[data-theme='dark'] .confession-detail-header .timestamp {
+  background: rgba(255, 255, 255, 0.1);
+  color: #e2e8f0;
+}
+
+[data-theme='dark'] .confession-detail-footer,
+.confession-detail-container[data-theme='dark'] .confession-detail-footer {
+  background: #0f172a;
+  border-top-color: #334155;
+}
+
+[data-theme='dark'] .back-btn {
+  background: #1e293b;
+  border-color: #334155;
+  color: #f8fafc;
+}
+
+[data-theme='dark'] .back-btn:hover {
+  background: #334155;
+}
+
+[data-theme='dark'] .comment-form textarea:disabled {
+  background-color: #334155;
+  color: #94a3b8;
+}
+
+[data-theme='dark'] .empty-state {
+  background: #1e293b;
+  color: #94a3b8;
+  border-color: #334155;
+}
+
+[data-theme='dark'] .share-option {
+  background: #334155;
+  border-color: #475569;
+  color: #f8fafc;
+}
+
+[data-theme='dark'] .share-option:hover {
+  background: #475569;
+}
+
+[data-theme='dark'] .confession-detail-content {
+  background: #1e293b;
+  color: #e2e8f0;
+}
+
+[data-theme='dark'] .share-modal-inner {
+  background: #1e293b;
+  color: #f8fafc;
+}
+
+[data-theme='dark'] .share-modal-close {
+  color: #f8fafc;
+}
+
+[data-theme='dark'] .comment-text,
+[data-theme='dark'] .reply-text {
+  color: #cbd5e1;
+}
+
+[data-theme='dark'] .comment-author,
+[data-theme='dark'] .reply-author {
+  color: #f1f5f9;
+}
+
+[data-theme='dark'] .timestamp {
+  color: #94a3b8;
+}
+
+[data-theme='dark'] .reply-avatar,
+[data-theme='dark'] .avatar {
+  background: #334155;
 }
