@@ -166,15 +166,10 @@ export default function Confessions({ searchQuery = '', sidebarOpen = false }) {
 
     setIsCreating(true);
     try {
-      let categoryName = null;
-      if (formCategory === 'other') {
-        categoryName = 'Other';
-      } else {
-        const cat = categories.find(c => c.id === formCategory);
-        categoryName = cat ? cat.name : 'Unknown';
-      }
+      const cat = categories.find(c => c.id === formCategory);
+      const categoryName = cat ? cat.name : 'Unknown';
 
-      await createConfession(formContent, formTitle || null, user.uid, formCategory === 'other' ? null : formCategory, categoryName);
+      await createConfession(formContent, formTitle || null, user.uid, formCategory, categoryName);
       setFormContent('');
       setFormTitle('');
       setFormCategory('');
@@ -418,7 +413,7 @@ export default function Confessions({ searchQuery = '', sidebarOpen = false }) {
                   {categories.map(cat => (
                     <option key={cat.id} value={cat.id}>{cat.name}</option>
                   ))}
-                  <option value="other">Other</option>
+
                 </select>
               </div>
               <div className="form-group">
