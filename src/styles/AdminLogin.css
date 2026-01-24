@@ -77,8 +77,11 @@
   border: 1px solid rgba(0, 0, 0, 0.1);
   border-radius: 6px;
   font-size: 14px;
+  font-size: 14px;
   font-family: inherit;
   transition: border-color 200ms ease;
+  width: 100%;
+  box-sizing: border-box;
 }
 
 .form-group input:focus {

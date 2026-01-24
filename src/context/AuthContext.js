@@ -3,6 +3,7 @@ import {
   signInWithEmailAndPassword,
   signOut,
   onAuthStateChanged,
+  sendPasswordResetEmail,
 } from 'firebase/auth';
 import { auth } from '../firebase/config';
 
@@ -144,6 +145,21 @@ export function AuthProvider({ children }) {
       throw err;
     }
   };
+  // Reset Password
+  const resetPassword = async (email) => {
+    setError(null);
+    try {
+      const actionCodeSettings = {
+        url: window.location.origin + '/reset-password',
+        handleCodeInApp: true,
+      };
+      await sendPasswordResetEmail(auth, email, actionCodeSettings);
+    } catch (err) {
+      setError(err.message);
+      throw err;
+    }
+  };
+
   // Logout
   const logout = async () => {
     setError(null);
@@ -166,6 +182,7 @@ export function AuthProvider({ children }) {
     login,
     register,
     signInWithGoogle,
+    resetPassword,
     logout,
     userRole,
     isBanned,

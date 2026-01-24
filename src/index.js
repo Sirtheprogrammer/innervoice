@@ -12,6 +12,8 @@ import AdminAnnouncements from './pages/AdminAnnouncements';
 import AdminUpdates from './pages/AdminUpdates';
 import AdminConfessions from './pages/AdminConfessions';
 import AdminCategories from './pages/AdminCategories';
+import ForgotPassword from './pages/ForgotPassword';
+import ResetPassword from './pages/ResetPassword';
 import ConfessionDetail from './pages/ConfessionDetail';
 import Contacts from './pages/Contacts';
 import About from './pages/About';
@@ -34,6 +36,8 @@ root.render(
             <Route path="/login" element={<AdminLogin />} />
             <Route path="/profile" element={<Profile />} />
             <Route path="/register" element={<Register />} />
+            <Route path="/forgot-password" element={<ForgotPassword />} />
+            <Route path="/reset-password" element={<ResetPassword />} />
 
             {/* Protected admin routes */}
             <Route
