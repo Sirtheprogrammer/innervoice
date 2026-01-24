@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import '../styles/Contacts.css';
 import Header from '../components/Header';
+import Sidebar from '../components/Sidebar';
 
 export default function Contacts() {
   const [formData, setFormData] = useState({
@@ -11,6 +12,10 @@ export default function Contacts() {
   });
   const [submitted, setSubmitted] = useState(false);
   const [error, setError] = useState('');
+  const [sidebarOpen, setSidebarOpen] = useState(false);
+
+  const toggleSidebar = () => setSidebarOpen(open => !open);
+  const closeSidebar = () => setSidebarOpen(false);
 
   const handleChange = (e) => {
     const { name, value } = e.target;
@@ -53,7 +58,13 @@ export default function Contacts() {
 
   return (
     <>
-      <Header />
+      <Header toggleSidebar={toggleSidebar} />
+      <Sidebar isOpen={sidebarOpen} />
+      <div
+        className={`mobile-overlay ${sidebarOpen ? 'visible' : ''}`}
+        onClick={closeSidebar}
+        aria-hidden={!sidebarOpen}
+      />
       <div className="contacts-container">
         <div className="contacts-wrapper">
           <h1>Contact Us</h1>
