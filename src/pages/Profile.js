@@ -8,7 +8,7 @@ import {
 } from 'firebase/auth';
 import { doc, updateDoc } from 'firebase/firestore';
 import { useNavigate, useLocation } from 'react-router-dom';
-import { MdComment, MdEdit, MdDelete, MdClose, MdCheck } from 'react-icons/md';
+import { MdComment, MdEdit, MdDelete, MdClose, MdCheck, MdContentCopy } from 'react-icons/md';
 import { getConfessionsByUser, deleteConfession, updateConfession } from '../services/confessionsService';
 import Header from '../components/Header';
 import Sidebar from '../components/Sidebar';
@@ -249,6 +249,21 @@ export default function Profile() {
   };
 
 
+  /* Existing code ... */
+  if (loading) {
+    return (
+      <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', height: '100vh', background: 'var(--bg-main)' }}>
+        <div style={{ color: 'var(--text-primary)', fontSize: '18px' }}>Loading profile...</div>
+      </div>
+    );
+  }
+
+  if (!user) {
+    /* This typically shouldn't happen if the route is protected, but safe guard it */
+    // You might want to useEffect to navigate here, but for now just return null
+    return null;
+  }
+
   return (
     <>
       <Header toggleSidebar={toggleSidebar} />
@@ -344,6 +359,7 @@ export default function Profile() {
                 {email}
               </p>
 
+
               {/* Edit Profile Button */}
               <button
                 onClick={() => setShowEditModal(true)}
@@ -363,6 +379,69 @@ export default function Profile() {
               >
                 <MdEdit /> Edit Your Profile
               </button>
+
+              {/* Referral Section */}
+              <div style={{ marginTop: '40px', padding: '24px', background: 'var(--bg-secondary)', borderRadius: '16px', border: '1px solid var(--border-color)' }}>
+                <h3 style={{ margin: '0 0 16px 0', fontSize: '20px', fontWeight: '700', color: 'var(--text-primary)' }}>Referral Dashboard</h3>
+
+                <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '16px', marginBottom: '24px' }}>
+                  <div style={{ background: 'var(--bg-card)', padding: '16px', borderRadius: '12px', textAlign: 'center', boxShadow: '0 2px 4px rgba(0,0,0,0.05)' }}>
+                    <div style={{ fontSize: '24px', fontWeight: '800', color: 'var(--primary)', marginBottom: '4px' }}>{user?.xp || 0}XP</div>
+                    <div style={{ fontSize: '12px', color: 'var(--text-secondary)' }}>Total XP</div>
+                  </div>
+                  <div style={{ background: 'var(--bg-card)', padding: '16px', borderRadius: '12px', textAlign: 'center', boxShadow: '0 2px 4px rgba(0,0,0,0.05)' }}>
+                    <div style={{ fontSize: '24px', fontWeight: '800', color: '#10b981', marginBottom: '4px' }}>{(user?.balance || 0).toLocaleString()} TZS</div>
+                    <div style={{ fontSize: '12px', color: 'var(--text-secondary)' }}>Balance</div>
+                  </div>
+                  <div style={{ background: 'var(--bg-card)', padding: '16px', borderRadius: '12px', textAlign: 'center', boxShadow: '0 2px 4px rgba(0,0,0,0.05)' }}>
+                    <div style={{ fontSize: '24px', fontWeight: '800', color: '#8b5cf6', marginBottom: '4px' }}>{user?.referralCount || 0}</div>
+                    <div style={{ fontSize: '12px', color: 'var(--text-secondary)' }}>Referrals</div>
+                  </div>
+                </div>
+
+                <div style={{ display: 'flex', flexDirection: 'column', gap: '8px', textAlign: 'left' }}>
+                  <label style={{ fontSize: '14px', fontWeight: '600', color: 'var(--text-primary)' }}>Share your referral link</label>
+                  <p style={{ fontSize: '12px', color: 'var(--text-secondary)', margin: 0, marginBottom: '8px' }}>
+                    Earn 100 XP (100 TZS) for every user you invite!
+                  </p>
+                  <div style={{ display: 'flex', gap: '10px' }}>
+                    <input
+                      readOnly
+                      value={window.location.origin + '/register?ref=' + (user?.referralCode || '...')}
+                      style={{
+                        flex: 1,
+                        background: 'var(--bg-card)',
+                        border: '1px solid var(--border-color)',
+                        padding: '10px 12px',
+                        borderRadius: '8px',
+                        color: 'var(--text-primary)',
+                        fontFamily: 'monospace'
+                      }}
+                    />
+                    <button
+                      onClick={() => {
+                        navigator.clipboard.writeText(window.location.origin + '/register?ref=' + (user?.referralCode || ''));
+                        // Visual feedback could be added here
+                        alert('Referral link copied!');
+                      }}
+                      style={{
+                        background: 'var(--text-primary)',
+                        color: 'var(--bg-main)',
+                        border: 'none',
+                        borderRadius: '8px',
+                        padding: '0 16px',
+                        cursor: 'pointer',
+                        display: 'flex',
+                        alignItems: 'center',
+                        gap: '6px',
+                        fontWeight: '600'
+                      }}
+                    >
+                      <MdContentCopy /> Copy
+                    </button>
+                  </div>
+                </div>
+              </div>
 
               {status && <div className="error-message" style={{ background: '#f3f3f3', color: '#111', marginTop: '20px' }}>{status}</div>}
             </div>

@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import { FcGoogle } from 'react-icons/fc';
 import Header from '../components/Header';
 import Sidebar from '../components/Sidebar';
+import { useNavigate, useLocation } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 import '../styles/AdminLogin.css';
 
@@ -9,10 +10,24 @@ export default function Register() {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [confirmPassword, setConfirmPassword] = useState('');
+  const [referralCode, setReferralCode] = useState('');
   const [errorMsg, setErrorMsg] = useState('');
   const [isLoading, setIsLoading] = useState(false);
   const [sidebarOpen, setSidebarOpen] = useState(false);
+
   const { register, signInWithGoogle } = useAuth();
+  const navigate = useNavigate();
+
+  const location = useLocation();
+
+  React.useEffect(() => {
+    const params = new URLSearchParams(location.search);
+    const ref = params.get('ref');
+    if (ref) {
+      console.log("Captured referral code from URL:", ref);
+      setReferralCode(ref);
+    }
+  }, [location]);
 
   const toggleSidebar = () => setSidebarOpen(open => !open);
   const closeSidebar = () => setSidebarOpen(false);
@@ -28,13 +43,19 @@ export default function Register() {
 
     setIsLoading(true);
     try {
-      const result = await register(email, password);
+      const result = await register(email, password, referralCode);
       const role = result?.role;
-      if (role === 'admin') {
-        window.location.href = '/admin';
-      } else {
-        window.location.href = '/';
-      }
+
+      console.log("Registration successful. Waiting 5 seconds before redirecting to preserve logs...");
+
+      setTimeout(() => {
+        if (role === 'admin') {
+          navigate('/admin');
+        } else {
+          navigate('/');
+        }
+      }, 5000);
+
     } catch (err) {
       setErrorMsg(err.message || 'Failed to register. Please try again.');
     } finally {
@@ -46,13 +67,19 @@ export default function Register() {
     setErrorMsg('');
     setIsLoading(true);
     try {
-      const result = await signInWithGoogle();
+      const result = await signInWithGoogle(referralCode);
       const role = result?.role;
-      if (role === 'admin') {
-        window.location.href = '/admin';
-      } else {
-        window.location.href = '/';
-      }
+
+      console.log("Google Sign-in successful. Waiting 5 seconds before redirecting to preserve logs...");
+
+      setTimeout(() => {
+        if (role === 'admin') {
+          navigate('/admin');
+        } else {
+          navigate('/');
+        }
+      }, 5000);
+
     } catch (err) {
       setErrorMsg(err.message || 'Google sign-in failed');
     } finally {
@@ -86,6 +113,18 @@ export default function Register() {
                 onChange={(e) => setEmail(e.target.value)}
                 placeholder="you@example.com"
                 required
+                disabled={isLoading}
+              />
+            </div>
+
+            <div className="form-group">
+              <label htmlFor="referralCode">Referral Code (Optional)</label>
+              <input
+                id="referralCode"
+                type="text"
+                value={referralCode}
+                onChange={(e) => setReferralCode(e.target.value)}
+                placeholder="Enter referral code"
                 disabled={isLoading}
               />
             </div>

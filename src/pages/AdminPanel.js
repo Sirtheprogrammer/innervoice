@@ -124,9 +124,43 @@ export default function AdminPanel() {
         <section className="admin-section">
           <div className="section-header">
             <h2>Dashboard Overview</h2>
-            <button onClick={() => { fetchStats(); fetchUsers(); }} className="refresh-btn">
-              <MdRefresh /> Refresh
-            </button>
+            <div style={{ display: 'flex', gap: '8px' }}>
+              <button onClick={() => { fetchStats(); fetchUsers(); }} className="refresh-btn">
+                <MdRefresh /> Refresh
+              </button>
+              {/* Admin Tool: Fix Mappings */}
+              <button
+                onClick={async () => {
+                  if (!window.confirm("Run referral code migration? This will create public mappings for all current users.")) return;
+                  setLoading(true);
+                  try {
+                    const { users: allUsers } = await userService.getAllUsers(1000); // Fetch all/many
+                    let count = 0;
+                    const { doc, setDoc } = await import('firebase/firestore');
+                    const { db } = await import('../firebase/config');
+
+                    for (const u of allUsers) {
+                      if (u.referralCode) {
+                        // Normalize
+                        const code = u.referralCode.trim().toUpperCase();
+                        await setDoc(doc(db, 'referral_codes', code), { userId: u.id });
+                        count++;
+                      }
+                    }
+                    alert(`Migration complete. Processed ${count} codes.`);
+                  } catch (e) {
+                    console.error(e);
+                    alert("Migration failed: " + e.message);
+                  } finally {
+                    setLoading(false);
+                  }
+                }}
+                className="refresh-btn"
+                style={{ background: '#f59e0b' }}
+              >
+                Fix Referrals
+              </button>
+            </div>
           </div>
 
           <div className="stats-grid">

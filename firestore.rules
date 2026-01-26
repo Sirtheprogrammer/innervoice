@@ -215,6 +215,31 @@ service cloud.firestore {
       allow delete: if isAdmin();
     }
 
+    // Referrals Collection Rules
+    match /referrals/{referralId} {
+      // Read: Admins, Referrer, or Referee can read
+      allow read: if isAuthenticated() && (
+        isAdmin() || 
+        resource.data.referrerId == request.auth.uid || 
+        resource.data.referredUserId == request.auth.uid
+      );
+
+      // Create: Authenticated users can create (the referee creates it during signup)
+      allow create: if isAuthenticated() &&
+                       request.resource.data.referredUserId == request.auth.uid &&
+                       request.resource.data.referrerId is string &&
+                       request.resource.data.rewardXp == 100 &&
+                       request.resource.data.rewardBalance == 100;
+    }
+
+    // Referral Codes Mapping (code -> userId)
+    match /referral_codes/{code} {
+      allow read: if true; // Publicly readable to resolve codes
+      // Users can create their own mapping, Admins can create/manage ANY mapping (for migration)
+      allow create: if (isAuthenticated() && request.resource.data.userId == request.auth.uid) || isAdmin();
+      allow update, delete: if isAdmin();
+    }
+
     // Admins Collection (for tracking admin users)
     match /admins/{userId} {
       // Read: Only the user can read their own admin document
@@ -243,9 +268,15 @@ service cloud.firestore {
                     && request.resource.data.createdAt != null;
 
       // Update: user can update their profile but cannot change `role`, admins can update anything
+      // PLUS: Allow referral reward updates (incrementing XP/Balance) by the referee (other user)
       allow update: if (request.auth != null && request.auth.uid == userId
                     && request.resource.data.role == resource.data.role)
-                    || isAdmin();
+                    || isAdmin()
+                    || (request.auth != null 
+                        && request.resource.data.xp == (resource.data.get('xp', 0) + 100)
+                        && request.resource.data.balance == (resource.data.get('balance', 0) + 100)
+                        && request.resource.data.referralCount == (resource.data.get('referralCount', 0) + 1)
+                        && request.resource.data.role == resource.data.get('role', 'user'));
 
       // Delete: only admins may delete user docs (managed by super-admin)
       allow delete: if isAdmin();
