@@ -431,7 +431,7 @@ export default function Profile() {
               <div style={{ marginTop: '40px', padding: '24px', background: 'var(--bg-secondary)', borderRadius: '16px', border: '1px solid var(--border-color)' }}>
                 <h3 style={{ margin: '0 0 16px 0', fontSize: '20px', fontWeight: '700', color: 'var(--text-primary)' }}>Referral Dashboard</h3>
 
-                <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '16px', marginBottom: '24px' }}>
+                <div className="profile-stats-grid">
                   <div style={{ background: 'var(--bg-card)', padding: '16px', borderRadius: '12px', textAlign: 'center', boxShadow: '0 2px 4px rgba(0,0,0,0.05)' }}>
                     <div style={{ fontSize: '24px', fontWeight: '800', color: 'var(--primary)', marginBottom: '4px' }}>{user?.xp || 0}XP</div>
                     <div style={{ fontSize: '12px', color: 'var(--text-secondary)' }}>Total XP</div>

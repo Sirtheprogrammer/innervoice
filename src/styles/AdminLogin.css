@@ -148,3 +148,22 @@
     font-size: 20px;
   }
 }
+
+/* Profile Page Responsive Styles */
+.profile-stats-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 16px;
+  margin-bottom: 24px;
+}
+
+@media (max-width: 640px) {
+  .profile-stats-grid {
+    grid-template-columns: 1fr;
+    gap: 12px;
+  }
+
+  .profile-container {
+    padding: 16px !important;
+  }
+}
