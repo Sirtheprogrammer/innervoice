@@ -5,6 +5,7 @@ import SearchBar from './components/SearchBar';
 import Confessions from './components/Confessions';
 import Sidebar from './components/Sidebar';
 import Footer from './components/Footer';
+import ChatWidget from './components/ChatWidget'; // Added import for ChatWidget
 
 import { useTheme } from './context/ThemeContext';
 
@@ -39,7 +40,7 @@ export default function App() {
       </div>
 
       <Footer />
-
+      <ChatWidget />
     </div>
   );
 }

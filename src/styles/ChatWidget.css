@@ -1,0 +1,132 @@
+/* Chat Widget Floating Action Button */
+.chat-widget-fab {
+  position: fixed;
+  bottom: 24px;
+  right: 24px;
+  width: 56px;
+  height: 56px;
+  border-radius: 50%;
+  background: var(--primary);
+  color: white;
+  border: none;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  z-index: 9998;
+  transition: transform 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+}
+
+.chat-widget-fab:hover {
+  transform: scale(1.1);
+  background: var(--secondary);
+}
+
+.chat-widget-fab.hidden {
+  transform: scale(0);
+  pointer-events: none;
+}
+
+/* Chat Widget Overlay (Fullscreen but allows minimizing) */
+.chat-widget-overlay {
+  position: fixed;
+  bottom: 24px;
+  right: 24px;
+  width: 400px;
+  height: 600px;
+  max-width: calc(100vw - 48px);
+  max-height: calc(100vh - 48px);
+  background: white;
+  border-radius: 16px;
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.2);
+  display: flex;
+  flex-direction: column;
+  z-index: 9999;
+  transition: all 0.3s ease-in-out;
+  overflow: hidden;
+  border: 1px solid var(--border-color);
+}
+
+/* Mobile responsive full screen */
+@media (max-width: 520px) {
+  .chat-widget-overlay {
+    bottom: 0;
+    right: 0;
+    width: 100%;
+    height: 100%;
+    max-width: 100%;
+    max-height: 100%;
+    border-radius: 0;
+  }
+}
+
+/* The magic for "minimizing":
+   We don't use display:none because that reloads the iframe.
+   Instead, we translate it off-screen or scale it down.
+*/
+.chat-widget-overlay.hidden {
+  opacity: 0;
+  transform: translateY(20px) scale(0.9);
+  pointer-events: none;
+  /* Ideally we want it completely hidden from screen readers too, 
+     but keeping it in DOM for session. 
+     Visibility: hidden prevents interaction but keeps state. 
+  */
+  visibility: hidden;
+}
+
+.chat-widget-overlay.visible {
+  opacity: 1;
+  transform: translateY(0) scale(1);
+  pointer-events: auto;
+  visibility: visible;
+}
+
+.chat-widget-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 12px 16px;
+  background: var(--bg-header);
+  /* Match app theme */
+  color: white;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.chat-title {
+  font-weight: 600;
+  font-size: 1rem;
+}
+
+.chat-close-btn {
+  background: transparent;
+  border: none;
+  color: white;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 4px;
+  border-radius: 50%;
+  transition: background 0.2s;
+}
+
+.chat-close-btn:hover {
+  background: rgba(255, 255, 255, 0.1);
+}
+
+.chat-widget-iframe-container {
+  flex: 1;
+  width: 100%;
+  height: 100%;
+  background: #f1f5f9;
+  position: relative;
+}
+
+.chat-iframe {
+  width: 100%;
+  height: 100%;
+  border: none;
+  display: block;
+}
