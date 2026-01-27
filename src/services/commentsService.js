@@ -13,7 +13,8 @@ import {
   getCountFromServer,
 } from 'firebase/firestore';
 import { db } from '../firebase/config';
-import { updateConfessionCommentCount } from './confessionsService';
+import { updateConfessionCommentCount, getConfessionById } from './confessionsService';
+import { addNotification } from './notificationsService';
 
 const COMMENTS_COLLECTION = 'comments';
 
@@ -59,8 +60,9 @@ function validateCommentData(comment) {
  * @param {string} confessionId - ID of the confession being commented on
  * @param {string} content - Comment content
  * @param {string} parentCommentId - Optional ID of parent comment for replies
+ * @param {string} currentUserId - Optional ID of the user creating the comment (for notification context)
  */
-export async function createComment(confessionId, content, parentCommentId = null) {
+export async function createComment(confessionId, content, parentCommentId = null, currentUserId = null) {
   try {
     validateCommentData({ confessionId, content });
 
@@ -76,6 +78,23 @@ export async function createComment(confessionId, content, parentCommentId = nul
 
     // Update the confession's comment count
     await updateConfessionCommentCount(confessionId, 1);
+
+    // Notify the confession owner
+    try {
+      const confession = await getConfessionById(confessionId);
+      if (confession && confession.userId && confession.userId !== currentUserId) {
+        await addNotification({
+          recipientId: confession.userId,
+          senderId: currentUserId,
+          confessionId: confessionId,
+          message: 'Someone commented on your confession.',
+          type: 'comment',
+        });
+      }
+    } catch (notifError) {
+      console.error('Failed to send notification:', notifError);
+      // Non-blocking error
+    }
 
     return {
       id: docRef.id,

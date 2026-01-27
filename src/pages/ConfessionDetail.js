@@ -111,7 +111,7 @@ export default function ConfessionDetail() {
 
     setIsSubmitting(true);
     try {
-      await createComment(confessionId, commentContent);
+      await createComment(confessionId, commentContent, null, user?.uid);
       setCommentContent('');
       setCommentSuccess('Comment posted!');
       await fetchConfessionAndComments();
@@ -140,7 +140,7 @@ export default function ConfessionDetail() {
 
     setIsSubmitting(true);
     try {
-      await createComment(confessionId, replyContent, parentCommentId);
+      await createComment(confessionId, replyContent, parentCommentId, user?.uid);
       setReplyContent('');
       setReplyingTo(null);
       setCommentSuccess('Reply posted!');

@@ -215,6 +215,27 @@ service cloud.firestore {
       allow delete: if isAdmin();
     }
 
+    // Notifications Collection Rules
+    match /notifications/{notificationId} {
+      // Read: Recipient can read their own notifications
+      allow read: if isAuthenticated() && resource.data.recipientId == request.auth.uid;
+      
+      // Create: Any authenticated user can create a notification (e.g. when commenting)
+      allow create: if isAuthenticated() &&
+                       request.resource.data.recipientId != null &&
+                       request.resource.data.recipientId is string &&
+                       request.resource.data.message is string &&
+                       request.resource.data.createdAt != null;
+      
+      // Update: Recipient can update (e.g. mark as read)
+      allow update: if isAuthenticated() && 
+                       resource.data.recipientId == request.auth.uid &&
+                       request.resource.data.read is bool;
+                       
+      // Delete: Recipient can delete
+      allow delete: if isAuthenticated() && resource.data.recipientId == request.auth.uid;
+    }
+
     // Referrals Collection Rules
     match /referrals/{referralId} {
       // Read: Admins, Referrer, or Referee can read
