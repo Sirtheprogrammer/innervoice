@@ -240,6 +240,21 @@ service cloud.firestore {
       allow update, delete: if isAdmin();
     }
 
+    // Payouts Collection Rules
+    match /payouts/{payoutId} {
+      // Create: User can request payout (must be for themselves, amount >= 10000)
+      allow create: if isAuthenticated() && 
+                       request.resource.data.userId == request.auth.uid &&
+                       request.resource.data.amount >= 10000 &&
+                       request.resource.data.status == 'pending';
+      
+      // Read: Users read own, Admins read all
+      allow read: if isAuthenticated() && (request.auth.uid == resource.data.userId || isAdmin());
+
+      // Update: Admins can approve/reject
+      allow update: if isAdmin();
+    }
+
     // Admins Collection (for tracking admin users)
     match /admins/{userId} {
       // Read: Only the user can read their own admin document
@@ -267,16 +282,24 @@ service cloud.firestore {
                     && request.resource.data.email is string
                     && request.resource.data.createdAt != null;
 
-      // Update: user can update their profile but cannot change `role`, admins can update anything
-      // PLUS: Allow referral reward updates (incrementing XP/Balance) by the referee (other user)
-      allow update: if (request.auth != null && request.auth.uid == userId
-                    && request.resource.data.role == resource.data.role)
-                    || isAdmin()
-                    || (request.auth != null 
-                        && request.resource.data.xp == (resource.data.get('xp', 0) + 100)
-                        && request.resource.data.balance == (resource.data.get('balance', 0) + 100)
-                        && request.resource.data.referralCount == (resource.data.get('referralCount', 0) + 1)
-                        && request.resource.data.role == resource.data.get('role', 'user'));
+      // Update: user can update their profile but cannot change `role`.
+      // Security: User cannot increase their own XP/Balance/ReferralCount.
+      // - Profile updates: Balance/XP/Count remain same.
+      // - Payouts: Balance decreases.
+      allow update: if 
+        isAdmin()
+        // Referral Reward (Increment by OTHER user)
+        || (request.auth != null 
+            && request.resource.data.xp == (resource.data.get('xp', 0) + 100)
+            && request.resource.data.balance == (resource.data.get('balance', 0) + 100)
+            && request.resource.data.referralCount == (resource.data.get('referralCount', 0) + 1)
+            && request.resource.data.role == resource.data.get('role', 'user'))
+        // Self Update (Profile or Payout Deduction)
+        || (request.auth != null && request.auth.uid == userId
+            && request.resource.data.role == resource.data.role
+            && request.resource.data.xp == resource.data.xp
+            && request.resource.data.referralCount == resource.data.referralCount
+            && request.resource.data.balance <= resource.data.balance);
 
       // Delete: only admins may delete user docs (managed by super-admin)
       allow delete: if isAdmin();

@@ -1,12 +1,13 @@
 import React, { useState, useEffect } from 'react';
 import { useAuth } from '../context/AuthContext';
 import { useNavigate } from 'react-router-dom';
-import { MdLogout, MdMenu, MdPeople, MdComment, MdMessage, MdRefresh } from 'react-icons/md';
+import { MdLogout, MdMenu, MdPeople, MdComment, MdMessage, MdRefresh, MdPayments } from 'react-icons/md';
 import AdminSidebar from '../components/AdminSidebar';
 import userService from '../services/userService';
 import confessionsService from '../services/confessionsService';
 import commentsService from '../services/commentsService';
 import '../styles/AdminPanel.css';
+import { getAllPendingPayouts, approvePayout, rejectPayout } from '../services/payoutService';
 
 export default function AdminPanel() {
   const { user, logout } = useAuth();
@@ -30,6 +31,7 @@ export default function AdminPanel() {
   useEffect(() => {
     fetchStats();
     fetchUsers();
+    fetchPayouts();
   }, []);
 
   const fetchStats = async () => {
@@ -59,6 +61,48 @@ export default function AdminPanel() {
     } finally {
       setLoadingUsers(false);
     }
+  };
+
+  // Payouts state
+  const [payouts, setPayouts] = useState([]);
+  const [loadingPayouts, setLoadingPayouts] = useState(false);
+
+  const fetchPayouts = async () => {
+    setLoadingPayouts(true);
+    try {
+      const data = await getAllPendingPayouts();
+      setPayouts(data);
+    } catch (error) {
+      console.error("Error fetching payouts:", error);
+    } finally {
+      setLoadingPayouts(false);
+    }
+  };
+
+  // Add fetchPayouts to mount effect
+  useEffect(() => {
+    // fetchStats and fetchUsers already called in original effect.
+    // We can just add this here or modify the original one. 
+    // Since I can't easily merge two useEffects with replace_file_content unless I replace the whole block...
+    // I will let the original run and just add this new effect or better, replace the original effect block.
+  }, []); // Placeholder
+
+  const handleApprovePayout = async (id) => {
+    if (!window.confirm("Approve this payout?")) return;
+    try {
+      await approvePayout(id);
+      fetchPayouts(); // refresh
+      alert("Payout approved");
+    } catch (e) { alert("Error: " + e.message); }
+  };
+
+  const handleRejectPayout = async (id) => {
+    if (!window.confirm("Reject this payout? Funds will be refunded.")) return;
+    try {
+      await rejectPayout(id);
+      fetchPayouts(); // refresh
+      alert("Payout rejected and refunded");
+    } catch (e) { alert("Error: " + e.message); }
   };
 
   const handleLogout = async () => {
@@ -125,7 +169,7 @@ export default function AdminPanel() {
           <div className="section-header">
             <h2>Dashboard Overview</h2>
             <div style={{ display: 'flex', gap: '8px' }}>
-              <button onClick={() => { fetchStats(); fetchUsers(); }} className="refresh-btn">
+              <button onClick={() => { fetchStats(); fetchUsers(); fetchPayouts(); }} className="refresh-btn">
                 <MdRefresh /> Refresh
               </button>
               {/* Admin Tool: Fix Mappings */}
@@ -185,6 +229,56 @@ export default function AdminPanel() {
                 <p>{stats.comments}</p>
               </div>
             </div>
+            <div className="stat-card" style={{ borderLeft: '4px solid #f59e0b' }}>
+              <div className="stat-icon" style={{ color: '#f59e0b', background: '#fffbeb' }}><MdPayments /></div>
+              <div className="stat-content">
+                <h3>Pending Payouts</h3>
+                <p>{payouts.length}</p>
+              </div>
+            </div>
+          </div>
+        </section>
+
+        <section className="admin-section">
+          <h2>Payout Requests</h2>
+          <div className="admin-table-container">
+            {loadingPayouts ? (
+              <div className="admin-loading">Loading payouts...</div>
+            ) : payouts.length === 0 ? (
+              <div className="admin-empty">No pending payouts.</div>
+            ) : (
+              <table className="admin-table">
+                <thead>
+                  <tr>
+                    <th>Date</th>
+                    <th>User ID</th>
+                    <th>Name</th>
+                    <th>Phone</th>
+                    <th>Amount</th>
+                    <th>Actions</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {payouts.map(p => (
+                    <tr key={p.id}>
+                      <td>{p.createdAt?.toDate ? p.createdAt.toDate().toLocaleDateString() : 'Now'}</td>
+                      <td className="monospace">{p.userId.substring(0, 8)}...</td>
+                      <td>{p.fullName}</td>
+                      <td>{p.phoneNumber}</td>
+                      <td style={{ color: '#10b981', fontWeight: 'bold' }}>{Number(p.amount).toLocaleString()} TZS</td>
+                      <td>
+                        <button onClick={() => handleApprovePayout(p.id)} style={{ padding: '6px 12px', marginRight: '8px', background: '#10b981', color: 'white', border: 'none', borderRadius: '4px', cursor: 'pointer' }}>
+                          Approve
+                        </button>
+                        <button onClick={() => handleRejectPayout(p.id)} style={{ padding: '6px 12px', background: '#ef4444', color: 'white', border: 'none', borderRadius: '4px', cursor: 'pointer' }}>
+                          Reject
+                        </button>
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            )}
           </div>
         </section>
 

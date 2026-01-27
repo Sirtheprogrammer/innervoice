@@ -8,8 +8,9 @@ import {
 } from 'firebase/auth';
 import { doc, updateDoc } from 'firebase/firestore';
 import { useNavigate, useLocation } from 'react-router-dom';
-import { MdComment, MdEdit, MdDelete, MdClose, MdCheck, MdContentCopy } from 'react-icons/md';
+import { MdComment, MdEdit, MdDelete, MdClose, MdCheck, MdContentCopy, MdPayments, MdHistory } from 'react-icons/md';
 import { getConfessionsByUser, deleteConfession, updateConfession } from '../services/confessionsService';
+import { requestPayout, getPayoutsByUser } from '../services/payoutService';
 import Header from '../components/Header';
 import Sidebar from '../components/Sidebar';
 import '../styles/AdminLogin.css';
@@ -43,8 +44,54 @@ export default function Profile() {
   // Profile edit modal state
   const [showEditModal, setShowEditModal] = useState(false);
 
+  // Payout state
+  const [showPayoutModal, setShowPayoutModal] = useState(false);
+  const [payoutAmount, setPayoutAmount] = useState('');
+  const [payoutPhone, setPayoutPhone] = useState('');
+  const [payoutName, setPayoutName] = useState('');
+  const [payoutLoading, setPayoutLoading] = useState(false);
+  const [payoutStatus, setPayoutStatus] = useState('');
+
   const toggleSidebar = () => setSidebarOpen(open => !open);
   const closeSidebar = () => setSidebarOpen(false);
+
+  // ... (keep useEffects) ...
+
+  const handleRequestPayout = async (e) => {
+    e.preventDefault();
+    setPayoutStatus('');
+
+    const amount = Number(payoutAmount);
+    if (!amount || amount < 10000) {
+      setPayoutStatus('Minimum withdrawal is 10,000 TZS');
+      return;
+    }
+    if (amount > (user?.balance || 0)) {
+      setPayoutStatus('Insufficient balance');
+      return;
+    }
+    if (!payoutPhone || !payoutName) {
+      setPayoutStatus('Please fill in all fields');
+      return;
+    }
+
+    setPayoutLoading(true);
+    try {
+      await requestPayout(user.uid, amount, payoutPhone, payoutName);
+      setPayoutStatus('Request submitted successfully!');
+      setTimeout(() => {
+        setShowPayoutModal(false);
+        setPayoutStatus('');
+        setPayoutAmount('');
+        // Optimistically update local user balance if needed, but context might refresh
+      }, 2000);
+    } catch (error) {
+      console.error(error);
+      setPayoutStatus('Failed to request payout: ' + error.message);
+    } finally {
+      setPayoutLoading(false);
+    }
+  };
 
   useEffect(() => {
     if (user) {
@@ -392,6 +439,21 @@ export default function Profile() {
                   <div style={{ background: 'var(--bg-card)', padding: '16px', borderRadius: '12px', textAlign: 'center', boxShadow: '0 2px 4px rgba(0,0,0,0.05)' }}>
                     <div style={{ fontSize: '24px', fontWeight: '800', color: '#10b981', marginBottom: '4px' }}>{(user?.balance || 0).toLocaleString()} TZS</div>
                     <div style={{ fontSize: '12px', color: 'var(--text-secondary)' }}>Balance</div>
+                    <button
+                      onClick={() => setShowPayoutModal(true)}
+                      style={{
+                        marginTop: '8px',
+                        background: '#10b981',
+                        color: 'white',
+                        border: 'none',
+                        borderRadius: '4px',
+                        padding: '4px 12px',
+                        fontSize: '12px',
+                        cursor: 'pointer'
+                      }}
+                    >
+                      Withdraw
+                    </button>
                   </div>
                   <div style={{ background: 'var(--bg-card)', padding: '16px', borderRadius: '12px', textAlign: 'center', boxShadow: '0 2px 4px rgba(0,0,0,0.05)' }}>
                     <div style={{ fontSize: '24px', fontWeight: '800', color: '#8b5cf6', marginBottom: '4px' }}>{user?.referralCount || 0}</div>
