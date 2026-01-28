@@ -1,9 +1,23 @@
 import React, { useState } from 'react';
 import { MdChat, MdClose } from 'react-icons/md';
+import { subscribeToGlobalSettings } from '../services/settingsService';
 import '../styles/ChatWidget.css';
 
 export default function ChatWidget() {
   const [isOpen, setIsOpen] = useState(false);
+  const [isEnabled, setIsEnabled] = useState(true);
+
+  React.useEffect(() => {
+    const unsubscribe = subscribeToGlobalSettings((settings) => {
+      setIsEnabled(!!settings.chatEnabled);
+      if (settings.chatEnabled === false) {
+        setIsOpen(false);
+      }
+    });
+    return () => unsubscribe();
+  }, []);
+
+  if (!isEnabled) return null;
 
   const toggleChat = () => {
     setIsOpen(!isOpen);
