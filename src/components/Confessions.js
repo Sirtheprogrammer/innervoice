@@ -1,4 +1,4 @@
-import React, { useEffect, useState, useMemo } from 'react';
+import React, { useEffect, useState, useMemo, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { MdComment, MdShare, MdFavorite, MdFavoriteBorder } from 'react-icons/md';
 import { getAllConfessions, createConfession, likeConfession } from '../services/confessionsService';
@@ -39,6 +39,12 @@ export default function Confessions({ searchQuery = '', sidebarOpen = false }) {
   const navigate = useNavigate();
   const { user, isBanned } = useAuth();
   const { theme } = useTheme();
+  const CONFESSIONS_PER_PAGE = 12;
+  const CACHE_KEY = 'cached_confessions';
+  const CACHE_TIMESTAMP_KEY = 'confessions_cache_timestamp';
+  const CATEGORIES_CACHE_KEY = 'cached_categories';
+  const CATEGORIES_CACHE_TIMESTAMP_KEY = 'categories_cache_timestamp';
+  
   const [confessions, setConfessions] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
@@ -51,20 +57,40 @@ export default function Confessions({ searchQuery = '', sidebarOpen = false }) {
   const [categories, setCategories] = useState([]);
   const [formCategory, setFormCategory] = useState('');
   const [activeCategory, setActiveCategory] = useState('all');
+  const [currentPage, setCurrentPage] = useState(1);
+  const confessionsListRef = useRef(null);
 
-  // Sort and filter confessions with smart ranking
-  const filteredConfessions = useMemo(() => {
+  // Sort and filter confessions with smart ranking + pagination
+  const { paginatedConfessions, totalPages, totalConfessions } = useMemo(() => {
     // First, sort all confessions by ranking score
-    const sortedConfessions = [...confessions].sort((a, b) => {
+    let sortedConfessions = [...confessions].sort((a, b) => {
       return calculateRankingScore(b) - calculateRankingScore(a);
     });
 
     // Then apply search filter if there's a query
-    if (!searchQuery || !searchQuery.trim()) {
-      return sortedConfessions;
+    if (searchQuery && searchQuery.trim()) {
+      sortedConfessions = fuzzySearch(sortedConfessions, searchQuery, ['title', 'content'], 0.3);
     }
-    return fuzzySearch(sortedConfessions, searchQuery, ['title', 'content'], 0.3);
-  }, [confessions, searchQuery]);
+
+    // Apply active category filter
+    if (activeCategory !== 'all') {
+      sortedConfessions = sortedConfessions.filter(c => c.categoryId === activeCategory);
+    }
+
+    const totalCount = sortedConfessions.length;
+    const totalPagesCount = Math.ceil(totalCount / CONFESSIONS_PER_PAGE);
+    
+    // Calculate pagination
+    const startIndex = (currentPage - 1) * CONFESSIONS_PER_PAGE;
+    const endIndex = startIndex + CONFESSIONS_PER_PAGE;
+    const paginated = sortedConfessions.slice(startIndex, endIndex);
+
+    return {
+      paginatedConfessions: paginated,
+      totalPages: totalPagesCount,
+      totalConfessions: totalCount
+    };
+  }, [confessions, searchQuery, activeCategory, currentPage, CONFESSIONS_PER_PAGE]);
 
   // Track liked confessions (persisted in localStorage)
   const [likedConfessions, setLikedConfessions] = useState(() => {
@@ -72,7 +98,6 @@ export default function Confessions({ searchQuery = '', sidebarOpen = false }) {
     return saved ? JSON.parse(saved) : [];
   });
 
-  // Fetch confessions on mount
   useEffect(() => {
     fetchConfessions();
     fetchCategories();
@@ -80,31 +105,143 @@ export default function Confessions({ searchQuery = '', sidebarOpen = false }) {
 
   const fetchCategories = async () => {
     try {
-      const data = await getCategories();
-      setCategories(data);
+      // Get cached categories
+      const cachedCategories = getCachedCategories();
+      
+      // If we have cache, display it first
+      if (cachedCategories.length > 0) {
+        setCategories(cachedCategories);
+      }
+
+      // Fetch new categories from Firestore
+      const newCategories = await getCategories();
+      
+      // Merge new with cached
+      const mergedCategories = cachedCategories.length > 0 
+        ? mergeCategories(cachedCategories, newCategories)
+        : newCategories;
+
+      // Update state and cache
+      setCategories(mergedCategories);
+      saveCategoriesTolocalStorage(mergedCategories);
     } catch (err) {
       console.error('Error fetching categories:', err);
     }
   };
 
   useEffect(() => {
+    setCurrentPage(1); // Reset to first page when category changes
     fetchConfessions();
   }, [activeCategory]); // Re-fetch when category changes
+
+  // Scroll to top when page changes
+  useEffect(() => {
+    if (confessionsListRef.current) {
+      confessionsListRef.current.scrollIntoView({
+        behavior: 'smooth',
+        block: 'start'
+      });
+    }
+  }, [currentPage]);
+
+  // localStorage helper functions
+  const getCachedConfessions = () => {
+    try {
+      const cached = localStorage.getItem(CACHE_KEY);
+      return cached ? JSON.parse(cached) : [];
+    } catch (err) {
+      console.error('Error reading cache:', err);
+      return [];
+    }
+  };
+
+  const saveCacheTolocalStorage = (confessionsData) => {
+    try {
+      localStorage.setItem(CACHE_KEY, JSON.stringify(confessionsData));
+      localStorage.setItem(CACHE_TIMESTAMP_KEY, Date.now().toString());
+    } catch (err) {
+      console.error('Error saving to cache:', err);
+    }
+  };
+
+  const mergeConfessions = (cachedConfessions, newConfessions) => {
+    // Create a map of new confessions by ID
+    const newConfessionsMap = new Map(newConfessions.map(c => [c.id, c]));
+    
+    // Update cached confessions with new data
+    const mergedConfessions = cachedConfessions.map(c => 
+      newConfessionsMap.get(c.id) || c
+    );
+
+    // Add completely new confessions at the beginning
+    const existingIds = new Set(cachedConfessions.map(c => c.id));
+    const newItems = newConfessions.filter(c => !existingIds.has(c.id));
+    
+    return [...newItems, ...mergedConfessions];
+  };
+
+  // Categories cache helper functions
+  const getCachedCategories = () => {
+    try {
+      const cached = localStorage.getItem(CATEGORIES_CACHE_KEY);
+      return cached ? JSON.parse(cached) : [];
+    } catch (err) {
+      console.error('Error reading categories cache:', err);
+      return [];
+    }
+  };
+
+  const saveCategoriesTolocalStorage = (categoriesData) => {
+    try {
+      localStorage.setItem(CATEGORIES_CACHE_KEY, JSON.stringify(categoriesData));
+      localStorage.setItem(CATEGORIES_CACHE_TIMESTAMP_KEY, Date.now().toString());
+    } catch (err) {
+      console.error('Error saving categories to cache:', err);
+    }
+  };
+
+  const mergeCategories = (cachedCategories, newCategories) => {
+    // Create a map of new categories by ID
+    const newCategoriesMap = new Map(newCategories.map(c => [c.id, c]));
+    
+    // Update cached categories with new data
+    const mergedCategories = cachedCategories.map(c => 
+      newCategoriesMap.get(c.id) || c
+    );
+
+    // Add completely new categories
+    const existingIds = new Set(cachedCategories.map(c => c.id));
+    const newItems = newCategories.filter(c => !existingIds.has(c.id));
+    
+    return [...mergedCategories, ...newItems];
+  };
 
   const fetchConfessions = async () => {
     setLoading(true);
     setError('');
     try {
-      // Pass null if 'all', or the categoryId otherwise. 'other' logic might need checking in service or here.
-      // For now assuming 'other' is treating as no category or specific id? 
-      // Actually my plan said "optional categoryId". If user selects "Other", is that an ID? 
-      // The form saves "Other" as categoryName and null as ID for "other".
-      // Wait, if I want to filter by "Other", I need to handle that. 
-      // For simplicity, let's filter by valid category IDs first.
-
       const filterId = activeCategory === 'all' ? null : activeCategory;
-      const data = await getAllConfessions(50, filterId);
-      setConfessions(data);
+      
+      // Get cached confessions
+      const cachedConfessions = getCachedConfessions();
+      
+      // If we have cache, display it first
+      if (cachedConfessions.length > 0) {
+        setConfessions(cachedConfessions);
+      }
+
+      // Fetch new confessions from Firestore
+      const newConfessions = await getAllConfessions(50, filterId);
+      
+      // Merge new with cached
+      const mergedConfessions = cachedConfessions.length > 0 
+        ? mergeConfessions(cachedConfessions, newConfessions)
+        : newConfessions;
+
+      // Update state and cache
+      setConfessions(mergedConfessions);
+      saveCacheTolocalStorage(mergedConfessions);
+      
     } catch (err) {
       console.error('Error fetching confessions:', err);
       setError('Failed to load confessions');
@@ -459,12 +596,12 @@ export default function Confessions({ searchQuery = '', sidebarOpen = false }) {
       {error && <div className="error-message">{error}</div>}
 
       {/* Confessions List */}
-      <div className="confessions-list">
+      <div className="confessions-list" ref={confessionsListRef}>
         {confessions.length === 0 ? (
           <div className="empty-state">
             <p>No confessions yet. Be the first to share!</p>
           </div>
-        ) : filteredConfessions.length === 0 ? (
+        ) : totalConfessions === 0 ? (
           <div className="empty-state search-no-results">
             <p>No confessions found matching "{searchQuery}"</p>
             <p className="search-hint">Try a different search term or check for typos</p>
@@ -473,11 +610,11 @@ export default function Confessions({ searchQuery = '', sidebarOpen = false }) {
           <>
             {searchQuery && (
               <div className="search-results-info">
-                Found {filteredConfessions.length} confession{filteredConfessions.length !== 1 ? 's' : ''}
+                Found {totalConfessions} confession{totalConfessions !== 1 ? 's' : ''}
                 matching "{searchQuery}"
               </div>
             )}
-            {filteredConfessions.map((confession) => (
+            {paginatedConfessions.map((confession) => (
               <div
                 key={confession.id}
                 className="confession-card"
@@ -546,6 +683,32 @@ export default function Confessions({ searchQuery = '', sidebarOpen = false }) {
           </>
         )}
       </div>
+
+      {/* Pagination Controls */}
+      {totalPages > 1 && totalConfessions > 0 && (
+        <div className="pagination-container">
+          <button
+            className="pagination-btn"
+            onClick={() => setCurrentPage(prev => Math.max(1, prev - 1))}
+            disabled={currentPage === 1}
+          >
+            ← Previous
+          </button>
+
+          <div className="pagination-info">
+            Page <span className="page-number">{currentPage}</span> of <span className="page-number">{totalPages}</span>
+            <span className="pagination-count">({paginatedConfessions.length} of {totalConfessions})</span>
+          </div>
+
+          <button
+            className="pagination-btn"
+            onClick={() => setCurrentPage(prev => Math.min(totalPages, prev + 1))}
+            disabled={currentPage === totalPages}
+          >
+            Next →
+          </button>
+        </div>
+      )}
     </div>
   );
 }
