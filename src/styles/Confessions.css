@@ -504,23 +504,21 @@
 /* Category Filter */
 .category-filter-container {
     display: flex;
+    flex-wrap: wrap;
     justify-content: center;
     /* Center the categories */
-    overflow-x: auto;
-    padding: 16px 24px;
+    align-items: center;
+    padding: 16px 20px;
     margin-top: 0;
     margin-bottom: 24px;
-    gap: 12px;
+    gap: 10px;
     position: fixed;
     top: 200px;
-    left: 50%;
-    transform: translateX(-50%);
+    left: 0;
+    right: 0;
     width: 100%;
-    max-width: 1200px;
     z-index: 900;
     /* Removed background/backdrop per user request */
-    margin-left: 0;
-    margin-right: 0;
     -ms-overflow-style: none;
     /* IE and Edge */
     scrollbar-width: none;
@@ -532,16 +530,18 @@
 }
 
 .category-chip {
-    padding: 8px 16px;
+    padding: 8px 14px;
     border-radius: 20px;
     background: var(--bg-glass);
     border: 1px solid var(--border-color);
     color: var(--text-secondary);
-    font-size: 14px;
+    font-size: 13px;
     font-weight: 500;
     cursor: pointer;
     white-space: nowrap;
     transition: all 0.2s ease;
+    flex-shrink: 0;
+    display: inline-block;
 }
 
 .category-chip:hover {
@@ -554,6 +554,35 @@
     color: white;
     border-color: var(--primary);
     box-shadow: 0 2px 8px rgba(79, 70, 229, 0.4);
+}
+
+/* Mobile screens - Stack categories more efficiently */
+@media (max-width: 768px) {
+    .category-filter-container {
+        padding: 12px 12px;
+        gap: 8px;
+        top: 200px;
+    }
+
+    .category-chip {
+        padding: 7px 12px;
+        font-size: 12px;
+    }
+}
+
+/* Extra small screens - Further optimization */
+@media (max-width: 480px) {
+    .category-filter-container {
+        padding: 10px 8px;
+        gap: 6px;
+        top: 200px;
+    }
+
+    .category-chip {
+        padding: 6px 10px;
+        font-size: 11px;
+        border-radius: 16px;
+    }
 }
 
 /* Form Dropdown */
