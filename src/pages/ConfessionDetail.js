@@ -13,6 +13,9 @@ import {
   getRepliesByCommentId,
   createComment,
 } from '../services/commentsService';
+import { updateProfile } from 'firebase/auth';
+import { doc, updateDoc } from 'firebase/firestore';
+import { auth, db } from '../firebase/config';
 import '../styles/ConfessionDetail.css';
 import { useTheme } from '../context/ThemeContext';
 
@@ -37,6 +40,12 @@ export default function ConfessionDetail() {
   const { user, isBanned } = useAuth();
   const { theme } = useTheme();
   const [shareModalOpen, setShareModalOpen] = useState(false);
+  const [showNicknameModal, setShowNicknameModal] = useState(false);
+  const [nicknameInput, setNicknameInput] = useState('');
+  const [nicknameError, setNicknameError] = useState('');
+  const [nicknameSaving, setNicknameSaving] = useState(false);
+  // Stores the pending action ('comment' or 'reply') so we can resume after nickname is set
+  const [pendingAction, setPendingAction] = useState(null);
 
   useEffect(() => {
     fetchConfessionAndComments();
@@ -94,6 +103,107 @@ export default function ConfessionDetail() {
     }
   };
 
+  /**
+   * Check if user has a nickname (displayName). If not, show prompt.
+   * Returns true if nickname exists, false if prompt was shown.
+   */
+  const ensureNickname = (actionType, actionData = null) => {
+    if (!user) return false;
+    if (user.displayName && user.displayName.trim()) return true;
+    // No nickname — show the prompt and store the pending action
+    setPendingAction({ type: actionType, data: actionData });
+    setNicknameInput('');
+    setNicknameError('');
+    setShowNicknameModal(true);
+    return false;
+  };
+
+  /**
+   * Save the nickname to Firebase Auth + Firestore, then resume the pending action.
+   */
+  const handleNicknameSave = async () => {
+    const trimmed = nicknameInput.trim();
+    if (!trimmed) {
+      setNicknameError('Please enter a nickname');
+      return;
+    }
+    if (trimmed.length < 2) {
+      setNicknameError('Nickname must be at least 2 characters');
+      return;
+    }
+    if (trimmed.length > 30) {
+      setNicknameError('Nickname cannot exceed 30 characters');
+      return;
+    }
+
+    setNicknameSaving(true);
+    setNicknameError('');
+    try {
+      // Update Firebase Auth displayName
+      await updateProfile(auth.currentUser, { displayName: trimmed });
+      // Update Firestore user document
+      await updateDoc(doc(db, 'users', user.uid), { displayName: trimmed });
+      // Update the local user object so subsequent checks pass
+      user.displayName = trimmed;
+
+      setShowNicknameModal(false);
+
+      // Resume the pending action
+      if (pendingAction) {
+        if (pendingAction.type === 'comment') {
+          await submitComment(trimmed);
+        } else if (pendingAction.type === 'reply') {
+          await submitReply(pendingAction.data, trimmed);
+        }
+        setPendingAction(null);
+      }
+    } catch (err) {
+      console.error('Error saving nickname:', err);
+      setNicknameError('Failed to save nickname. Please try again.');
+    } finally {
+      setNicknameSaving(false);
+    }
+  };
+
+  /**
+   * Actually submit a comment (called after nickname is confirmed).
+   */
+  const submitComment = async (nickname) => {
+    setIsSubmitting(true);
+    try {
+      await createComment(confessionId, commentContent, null, user?.uid, nickname);
+      setCommentContent('');
+      setCommentSuccess('Comment posted!');
+      await fetchConfessionAndComments();
+      setTimeout(() => setCommentSuccess(''), 3000);
+    } catch (err) {
+      console.error('Error creating comment:', err);
+      setCommentError(err.message || 'Failed to post comment');
+    } finally {
+      setIsSubmitting(false);
+    }
+  };
+
+  /**
+   * Actually submit a reply (called after nickname is confirmed).
+   */
+  const submitReply = async (parentCommentId, nickname) => {
+    setIsSubmitting(true);
+    try {
+      await createComment(confessionId, replyContent, parentCommentId, user?.uid, nickname);
+      setReplyContent('');
+      setReplyingTo(null);
+      setCommentSuccess('Reply posted!');
+      await fetchReplies(parentCommentId);
+      setTimeout(() => setCommentSuccess(''), 3000);
+    } catch (err) {
+      console.error('Error creating reply:', err);
+      setCommentError(err.message || 'Failed to post reply');
+    } finally {
+      setIsSubmitting(false);
+    }
+  };
+
   const handleAddComment = async (e) => {
     e.preventDefault();
     setCommentError('');
@@ -109,19 +219,11 @@ export default function ConfessionDetail() {
       return;
     }
 
-    setIsSubmitting(true);
-    try {
-      await createComment(confessionId, commentContent, null, user?.uid);
-      setCommentContent('');
-      setCommentSuccess('Comment posted!');
-      await fetchConfessionAndComments();
-      setTimeout(() => setCommentSuccess(''), 3000);
-    } catch (err) {
-      console.error('Error creating comment:', err);
-      setCommentError(err.message || 'Failed to post comment');
-    } finally {
-      setIsSubmitting(false);
-    }
+    // Check nickname — if missing, the modal will handle submission after nickname is set
+    const nickname = user?.displayName?.trim();
+    if (!ensureNickname('comment')) return;
+
+    await submitComment(nickname);
   };
 
   const handleAddReply = async (e, parentCommentId) => {
@@ -138,20 +240,11 @@ export default function ConfessionDetail() {
       return;
     }
 
-    setIsSubmitting(true);
-    try {
-      await createComment(confessionId, replyContent, parentCommentId, user?.uid);
-      setReplyContent('');
-      setReplyingTo(null);
-      setCommentSuccess('Reply posted!');
-      await fetchReplies(parentCommentId);
-      setTimeout(() => setCommentSuccess(''), 3000);
-    } catch (err) {
-      console.error('Error creating reply:', err);
-      setCommentError(err.message || 'Failed to post reply');
-    } finally {
-      setIsSubmitting(false);
-    }
+    // Check nickname — if missing, the modal will handle submission after nickname is set
+    const nickname = user?.displayName?.trim();
+    if (!ensureNickname('reply', parentCommentId)) return;
+
+    await submitReply(parentCommentId, nickname);
   };
   const toggleReplies = (commentId) => {
     if (expandedReplies[commentId]) {
@@ -372,12 +465,12 @@ export default function ConfessionDetail() {
                 <div className="comment">
                   <img
                     className="avatar"
-                    src={`https://api.dicebear.com/9.x/lorelei-neutral/svg`}
+                    src={`https://api.dicebear.com/9.x/lorelei-neutral/svg?seed=${encodeURIComponent(comment.nickname || 'anon')}`}
                     alt="avatar"
                   />
                   <div className="comment-body">
                     <div className="comment-top">
-                      <span className="comment-author">Anonymous</span>
+                      <span className="comment-author">{comment.nickname || 'Anonymous'}</span>
                       <span className="timestamp">
                         {formatDate(comment.createdAt)}
                       </span>
@@ -460,13 +553,13 @@ export default function ConfessionDetail() {
                             <div key={reply.id} className="reply">
                               <img
                                 className="reply-avatar"
-                                src={`https://avatars.dicebear.com/api/identicon/${reply.id}.svg`}
+                                src={`https://api.dicebear.com/9.x/lorelei-neutral/svg?seed=${encodeURIComponent(reply.nickname || 'anon')}`}
                                 alt="avatar"
                               />
                               <div className="reply-inner">
                                 <div className="reply-body">
                                   <span className="reply-author">
-                                    Anonymous
+                                    {reply.nickname || 'Anonymous'}
                                   </span>
                                   <span className="reply-timestamp">
                                     {formatDate(reply.createdAt)}
@@ -487,6 +580,114 @@ export default function ConfessionDetail() {
           </div>
         )}
       </div>
+
+      {/* Nickname Prompt Modal */}
+      {showNicknameModal && (
+        <div
+          className="nickname-modal-overlay"
+          style={{
+            position: 'fixed',
+            top: 0,
+            left: 0,
+            right: 0,
+            bottom: 0,
+            background: 'rgba(0, 0, 0, 0.6)',
+            zIndex: 2000,
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            padding: '20px',
+          }}
+          onClick={() => {
+            setShowNicknameModal(false);
+            setPendingAction(null);
+          }}
+        >
+          <div
+            className="nickname-modal"
+            onClick={(e) => e.stopPropagation()}
+            style={{
+              background: 'var(--bg-card, #fff)',
+              borderRadius: '16px',
+              padding: '28px 24px',
+              maxWidth: '420px',
+              width: '100%',
+              boxShadow: '0 8px 32px rgba(0,0,0,0.2)',
+            }}
+          >
+            <h3 style={{ margin: '0 0 8px 0', fontSize: '1.2rem' }}>Set Your Nickname</h3>
+            <p style={{ margin: '0 0 20px 0', color: 'var(--text-secondary, #666)', fontSize: '0.9rem' }}>
+              Choose a nickname to display with your comments. This will be visible to other users.
+            </p>
+            {nicknameError && (
+              <div className="form-error" style={{ marginBottom: '12px' }}>{nicknameError}</div>
+            )}
+            <input
+              type="text"
+              value={nicknameInput}
+              onChange={(e) => setNicknameInput(e.target.value)}
+              placeholder="Enter your nickname (2-30 characters)"
+              maxLength={30}
+              disabled={nicknameSaving}
+              onKeyDown={(e) => {
+                if (e.key === 'Enter') {
+                  e.preventDefault();
+                  handleNicknameSave();
+                }
+              }}
+              style={{
+                width: '100%',
+                padding: '12px 16px',
+                borderRadius: '10px',
+                border: '2px solid var(--border-color, #ddd)',
+                fontSize: '1rem',
+                background: 'var(--bg-input, #f9f9f9)',
+                color: 'var(--text-primary, #333)',
+                boxSizing: 'border-box',
+                outline: 'none',
+              }}
+              autoFocus
+            />
+            <div style={{ display: 'flex', gap: '10px', marginTop: '18px', justifyContent: 'flex-end' }}>
+              <button
+                onClick={() => {
+                  setShowNicknameModal(false);
+                  setPendingAction(null);
+                }}
+                disabled={nicknameSaving}
+                style={{
+                  padding: '10px 20px',
+                  borderRadius: '10px',
+                  border: '1px solid var(--border-color, #ddd)',
+                  background: 'transparent',
+                  color: 'var(--text-primary, #333)',
+                  fontSize: '0.9rem',
+                  cursor: 'pointer',
+                }}
+              >
+                Cancel
+              </button>
+              <button
+                onClick={handleNicknameSave}
+                disabled={nicknameSaving}
+                style={{
+                  padding: '10px 24px',
+                  borderRadius: '10px',
+                  border: 'none',
+                  background: 'var(--primary, #4f46e5)',
+                  color: 'white',
+                  fontSize: '0.9rem',
+                  fontWeight: '600',
+                  cursor: nicknameSaving ? 'not-allowed' : 'pointer',
+                  opacity: nicknameSaving ? 0.7 : 1,
+                }}
+              >
+                {nicknameSaving ? 'Saving...' : 'Save & Post'}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

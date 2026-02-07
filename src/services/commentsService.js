@@ -56,25 +56,29 @@ function validateCommentData(comment) {
 }
 
 /**
- * Create a new comment on a confession (anonymous)
+ * Create a new comment on a confession
  * @param {string} confessionId - ID of the confession being commented on
  * @param {string} content - Comment content
  * @param {string} parentCommentId - Optional ID of parent comment for replies
  * @param {string} currentUserId - Optional ID of the user creating the comment (for notification context)
+ * @param {string} nickname - Display name / nickname of the commenter
  */
-export async function createComment(confessionId, content, parentCommentId = null, currentUserId = null) {
+export async function createComment(confessionId, content, parentCommentId = null, currentUserId = null, nickname = null) {
   try {
     validateCommentData({ confessionId, content });
 
-    const docRef = await addDoc(collection(db, COMMENTS_COLLECTION), {
+    const commentData = {
       confessionId,
       content: content.trim(),
       parentCommentId,
+      nickname: nickname || 'Anonymous',
       createdAt: serverTimestamp(),
       updatedAt: serverTimestamp(),
       replyCount: 0,
       flagCount: 0,
-    });
+    };
+
+    const docRef = await addDoc(collection(db, COMMENTS_COLLECTION), commentData);
 
     // Update the confession's comment count
     await updateConfessionCommentCount(confessionId, 1);
@@ -87,7 +91,7 @@ export async function createComment(confessionId, content, parentCommentId = nul
           recipientId: confession.userId,
           senderId: currentUserId,
           confessionId: confessionId,
-          message: 'Someone commented on your confession.',
+          message: `${nickname || 'Someone'} commented on your confession.`,
           type: 'comment',
         });
       }
@@ -101,6 +105,7 @@ export async function createComment(confessionId, content, parentCommentId = nul
       confessionId,
       content: content.trim(),
       parentCommentId,
+      nickname: nickname || 'Anonymous',
       createdAt: new Date(),
       replyCount: 0,
       flagCount: 0,
