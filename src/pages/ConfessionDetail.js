@@ -171,7 +171,8 @@ export default function ConfessionDetail() {
   const submitComment = async (nickname) => {
     setIsSubmitting(true);
     try {
-      await createComment(confessionId, commentContent, null, user?.uid, nickname);
+      const photoURL = user?.photoURL || null;
+      await createComment(confessionId, commentContent, null, user?.uid, nickname, photoURL);
       setCommentContent('');
       setCommentSuccess('Comment posted!');
       await fetchConfessionAndComments();
@@ -190,7 +191,8 @@ export default function ConfessionDetail() {
   const submitReply = async (parentCommentId, nickname) => {
     setIsSubmitting(true);
     try {
-      await createComment(confessionId, replyContent, parentCommentId, user?.uid, nickname);
+      const photoURL = user?.photoURL || null;
+      await createComment(confessionId, replyContent, parentCommentId, user?.uid, nickname, photoURL);
       setReplyContent('');
       setReplyingTo(null);
       setCommentSuccess('Reply posted!');
@@ -465,8 +467,9 @@ export default function ConfessionDetail() {
                 <div className="comment">
                   <img
                     className="avatar"
-                    src={`https://api.dicebear.com/9.x/lorelei-neutral/svg?seed=${encodeURIComponent(comment.nickname || 'anon')}`}
+                    src={comment.photoURL || `https://api.dicebear.com/9.x/lorelei-neutral/svg?seed=${encodeURIComponent(comment.nickname || 'anon')}`}
                     alt="avatar"
+                    onError={(e) => { e.target.onerror = null; e.target.src = `https://api.dicebear.com/9.x/lorelei-neutral/svg?seed=${encodeURIComponent(comment.nickname || 'anon')}`; }}
                   />
                   <div className="comment-body">
                     <div className="comment-top">
@@ -553,8 +556,9 @@ export default function ConfessionDetail() {
                             <div key={reply.id} className="reply">
                               <img
                                 className="reply-avatar"
-                                src={`https://api.dicebear.com/9.x/lorelei-neutral/svg?seed=${encodeURIComponent(reply.nickname || 'anon')}`}
+                                src={reply.photoURL || `https://api.dicebear.com/9.x/lorelei-neutral/svg?seed=${encodeURIComponent(reply.nickname || 'anon')}`}
                                 alt="avatar"
+                                onError={(e) => { e.target.onerror = null; e.target.src = `https://api.dicebear.com/9.x/lorelei-neutral/svg?seed=${encodeURIComponent(reply.nickname || 'anon')}`; }}
                               />
                               <div className="reply-inner">
                                 <div className="reply-body">

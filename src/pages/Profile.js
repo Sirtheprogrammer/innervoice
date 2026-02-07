@@ -223,11 +223,11 @@ export default function Profile() {
     const key = process.env.REACT_APP_IMGBB_KEY || "b0cb512fd91d77dad4ae9f6f474507ad";
     if (!key) throw new Error('Missing REACT_APP_IMGBB_KEY environment variable');
 
-    // convert to base64
+    // Convert file to base64
     const toBase64 = (f) => new Promise((res, rej) => {
       const reader = new FileReader();
       reader.onload = () => res(reader.result);
-      reader.onerror = rej;
+      reader.onerror = () => rej(new Error('Failed to read file'));
       reader.readAsDataURL(f);
     });
 
@@ -237,32 +237,46 @@ export default function Profile() {
     const form = new FormData();
     form.append('image', base64);
 
-    const resp = await fetch(`https://api.imgbb.com/1/upload?key=${key}`, {
-      method: 'POST',
-      body: form,
-    });
+    let resp;
+    try {
+      resp = await fetch(`https://api.imgbb.com/1/upload?key=${key}`, {
+        method: 'POST',
+        body: form,
+      });
+    } catch (networkErr) {
+      throw new Error('Network error: could not reach image host. Check your connection.');
+    }
+
+    if (!resp.ok) {
+      throw new Error(`Image upload failed (HTTP ${resp.status}). The API key may be invalid.`);
+    }
+
     const json = await resp.json();
-    if (!json || !json.data || !json.data.url) throw new Error('Image upload failed');
+    if (!json || !json.data || !json.data.url) {
+      throw new Error('Image upload failed: unexpected response from server');
+    }
     return json.data.url;
   };
 
   const handleSaveProfile = async (e) => {
     e.preventDefault();
     setStatus('');
-    if (!currentPassword) {
-      setStatus('Please enter your current password to confirm changes');
-      return;
-    }
-    if (newPassword && newPassword !== confirmPassword) {
-      setStatus('New passwords do not match');
-      return;
+
+    // Password is only required when the user wants to change it
+    if (newPassword) {
+      if (!currentPassword) {
+        setStatus('Please enter your current password to change your password');
+        return false;
+      }
+      if (newPassword !== confirmPassword) {
+        setStatus('New passwords do not match');
+        return false;
+      }
     }
 
     setLoading(true);
     try {
-      // Reauthenticate
-      await signInWithEmailAndPassword(auth, email, currentPassword);
-
+      // Update display name and avatar (no password needed)
       let photoURL = user.photoURL || null;
       if (avatarFile) {
         setStatus('Uploading avatar...');
@@ -270,8 +284,8 @@ export default function Profile() {
       }
 
       if (displayName !== user.displayName || photoURL !== user.photoURL) {
+        setStatus('Saving profile...');
         await fbUpdateProfile(auth.currentUser, { displayName, photoURL });
-        // update Firestore users doc as well
         const userRef = doc(db, 'users', auth.currentUser.uid);
         await updateDoc(userRef, {
           displayName: displayName || null,
@@ -279,17 +293,24 @@ export default function Profile() {
         });
       }
 
-      if (newPassword) {
+      // Only reauthenticate + change password if the user filled in the password fields
+      if (newPassword && currentPassword) {
+        setStatus('Updating password...');
+        await signInWithEmailAndPassword(auth, email, currentPassword);
         await fbUpdatePassword(auth.currentUser, newPassword);
         setNewPassword('');
         setConfirmPassword('');
+        setCurrentPassword('');
       }
 
-      setCurrentPassword('');
+      setAvatarFile(null);
+      setPreview(photoURL);
       setStatus('Profile updated successfully');
+      return true;
     } catch (err) {
       console.error(err);
       setStatus(err.message || 'Failed to update profile');
+      return false;
     } finally {
       setLoading(false);
     }
@@ -672,7 +693,7 @@ export default function Profile() {
 
             <h2 style={{ marginTop: 0, marginBottom: '24px', color: 'var(--text-primary)' }}>Edit Your Profile</h2>
 
-            <form onSubmit={(e) => { handleSaveProfile(e); setShowEditModal(false); }} className="login-form">
+            <form onSubmit={async (e) => { const success = await handleSaveProfile(e); if (success) { setTimeout(() => setShowEditModal(false), 1000); } }} className="login-form">
               <div className="form-group">
                 <label htmlFor="displayName">Display name</label>
                 <input id="displayName" value={displayName} onChange={(e) => setDisplayName(e.target.value)} />
@@ -689,13 +710,19 @@ export default function Profile() {
                 <input type="file" accept="image/*" onChange={handleFileChange} />
               </div>
 
-              <div className="form-group">
-                <label>Current password</label>
-                <input type="password" value={currentPassword} onChange={(e) => setCurrentPassword(e.target.value)} placeholder="Required to save changes" />
+              <div style={{ borderTop: '1px solid var(--border-color, #ddd)', margin: '20px 0 16px', paddingTop: '16px' }}>
+                <p style={{ margin: '0 0 12px', fontSize: '14px', color: 'var(--text-secondary)' }}>
+                  Only fill in the fields below if you want to change your password.
+                </p>
               </div>
 
               <div className="form-group">
-                <label>New password (optional)</label>
+                <label>Current password</label>
+                <input type="password" value={currentPassword} onChange={(e) => setCurrentPassword(e.target.value)} placeholder="Required only for password change" />
+              </div>
+
+              <div className="form-group">
+                <label>New password</label>
                 <input type="password" value={newPassword} onChange={(e) => setNewPassword(e.target.value)} placeholder="Leave blank to keep current" />
               </div>
 

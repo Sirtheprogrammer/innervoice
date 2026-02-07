@@ -62,8 +62,9 @@ function validateCommentData(comment) {
  * @param {string} parentCommentId - Optional ID of parent comment for replies
  * @param {string} currentUserId - Optional ID of the user creating the comment (for notification context)
  * @param {string} nickname - Display name / nickname of the commenter
+ * @param {string} photoURL - Profile photo URL of the commenter
  */
-export async function createComment(confessionId, content, parentCommentId = null, currentUserId = null, nickname = null) {
+export async function createComment(confessionId, content, parentCommentId = null, currentUserId = null, nickname = null, photoURL = null) {
   try {
     validateCommentData({ confessionId, content });
 
@@ -72,6 +73,7 @@ export async function createComment(confessionId, content, parentCommentId = nul
       content: content.trim(),
       parentCommentId,
       nickname: nickname || 'Anonymous',
+      photoURL: photoURL || null,
       createdAt: serverTimestamp(),
       updatedAt: serverTimestamp(),
       replyCount: 0,
@@ -106,6 +108,7 @@ export async function createComment(confessionId, content, parentCommentId = nul
       content: content.trim(),
       parentCommentId,
       nickname: nickname || 'Anonymous',
+      photoURL: photoURL || null,
       createdAt: new Date(),
       replyCount: 0,
       flagCount: 0,
