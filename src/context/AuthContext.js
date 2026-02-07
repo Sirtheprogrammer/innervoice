@@ -16,6 +16,41 @@ import { db } from '../firebase/config';
 import { doc, getDoc, setDoc, updateDoc, serverTimestamp, collection, query, where, getDocs, increment, addDoc } from 'firebase/firestore';
 const AuthContext = createContext();
 
+// --- User profile cache helpers ---
+const PROFILE_CACHE_PREFIX = 'user_profile_';
+const PROFILE_CACHE_TTL = 10 * 60 * 1000; // 10 minutes
+
+function getCachedProfile(uid) {
+  try {
+    const raw = localStorage.getItem(PROFILE_CACHE_PREFIX + uid);
+    if (!raw) return null;
+    const cached = JSON.parse(raw);
+    if (Date.now() - cached._ts > PROFILE_CACHE_TTL) return null; // stale
+    return cached;
+  } catch {
+    return null;
+  }
+}
+
+function saveCachedProfile(uid, profileData) {
+  try {
+    localStorage.setItem(
+      PROFILE_CACHE_PREFIX + uid,
+      JSON.stringify({ ...profileData, _ts: Date.now() })
+    );
+  } catch (e) {
+    console.error('Error saving profile cache:', e);
+  }
+}
+
+function clearCachedProfile(uid) {
+  try {
+    if (uid) {
+      localStorage.removeItem(PROFILE_CACHE_PREFIX + uid);
+    }
+  } catch { /* ignore */ }
+}
+
 export function AuthProvider({ children }) {
   const [user, setUser] = useState(null);
   const [loading, setLoading] = useState(true);
@@ -23,62 +58,103 @@ export function AuthProvider({ children }) {
   const [userRole, setUserRole] = useState(null);
   const [isBanned, setIsBanned] = useState(false);
 
+  /**
+   * Apply profile data from cache or Firestore to state + user object.
+   */
+  const applyProfile = (currentUser, data) => {
+    setUserRole(data.role || null);
+    setIsBanned(data.banned === true);
+    currentUser.referralCode = data.referralCode || null;
+    currentUser.xp = data.xp || 0;
+    currentUser.balance = data.balance || 0;
+    currentUser.referralCount = data.referralCount || 0;
+    setUser(currentUser);
+  };
+
+  /**
+   * Fetch user profile from Firestore, run backfill if needed, and update cache.
+   * Returns the profile data object, or null if the user document doesn't exist.
+   */
+  const fetchAndCacheProfile = async (currentUser) => {
+    const userDocRef = doc(db, 'users', currentUser.uid);
+    const snap = await getDoc(userDocRef);
+
+    if (!snap.exists()) return null;
+
+    const data = snap.data();
+
+    // Backfill referral code if missing
+    if (!data.referralCode) {
+      const newCode = generateReferralCode();
+      await updateDoc(userDocRef, {
+        referralCode: newCode,
+        xp: data.xp || 0,
+        balance: data.balance || 0,
+        referralCount: data.referralCount || 0,
+      });
+
+      try {
+        await setDoc(doc(db, 'referral_codes', newCode), { userId: currentUser.uid });
+      } catch (e) { console.error('Error creating ref mapping:', e); }
+
+      data.referralCode = newCode;
+    } else {
+      // Ensure mapping exists (healing/backfill)
+      try {
+        const mapRef = doc(db, 'referral_codes', data.referralCode);
+        const mapSnap = await getDoc(mapRef);
+        if (!mapSnap.exists()) {
+          await setDoc(mapRef, { userId: currentUser.uid });
+        }
+      } catch (e) { console.error('Error ensuring ref mapping:', e); }
+    }
+
+    // Build the profile object we want to cache
+    const profile = {
+      role: data.role || null,
+      banned: data.banned === true,
+      referralCode: data.referralCode || null,
+      xp: data.xp || 0,
+      balance: data.balance || 0,
+      referralCount: data.referralCount || 0,
+    };
+
+    saveCachedProfile(currentUser.uid, profile);
+    return profile;
+  };
+
   // Listen for auth state changes
   useEffect(() => {
     const unsubscribe = onAuthStateChanged(auth, (currentUser) => {
       (async () => {
         if (currentUser) {
           try {
-            const userDocRef = doc(db, 'users', currentUser.uid);
-            const snap = await getDoc(userDocRef);
-            if (snap.exists()) {
-              const data = snap.data();
-              setUserRole(data.role);
-              setIsBanned(data.banned === true);
+            // 1. Try cached profile first for instant UI
+            const cached = getCachedProfile(currentUser.uid);
+            if (cached) {
+              applyProfile(currentUser, cached);
+              setLoading(false);
 
-              // Backfill referral code if missing
-              if (!data.referralCode) {
-                const newCode = generateReferralCode();
-                await updateDoc(userDocRef, {
-                  referralCode: newCode,
-                  xp: data.xp || 0,
-                  balance: data.balance || 0,
-                  referralCount: data.referralCount || 0
-                });
-
-                // Create mapping
-                try {
-                  await setDoc(doc(db, 'referral_codes', newCode), { userId: currentUser.uid });
-                } catch (e) { console.error("Error creating ref mapping:", e); }
-
-                // Update local state with the new code
-                currentUser.referralCode = newCode;
-                currentUser.xp = data.xp || 0;
-                currentUser.balance = data.balance || 0;
-                currentUser.referralCount = data.referralCount || 0;
-              } else {
-                // Ensure mapping exists (Healing/Backfill) for existing code
-                try {
-                  const mapRef = doc(db, 'referral_codes', data.referralCode);
-                  const mapSnap = await getDoc(mapRef);
-                  if (!mapSnap.exists()) {
-                    await setDoc(mapRef, { userId: currentUser.uid });
+              // 2. Background-refresh from Firestore to keep data fresh
+              fetchAndCacheProfile(currentUser)
+                .then((freshProfile) => {
+                  if (freshProfile) {
+                    applyProfile(currentUser, freshProfile);
                   }
-                } catch (e) { console.error("Error ensuring ref mapping:", e); }
+                })
+                .catch((err) => console.error('Background profile refresh failed:', err));
+              return;
+            }
 
-                // Attach firestore data to the user object
-                currentUser.referralCode = data.referralCode;
-                currentUser.xp = data.xp || 0;
-                currentUser.balance = data.balance || 0;
-                currentUser.referralCount = data.referralCount || 0;
-              }
-
+            // 3. No cache — fetch from Firestore (first visit / cache expired)
+            const profile = await fetchAndCacheProfile(currentUser);
+            if (profile) {
+              applyProfile(currentUser, profile);
             } else {
+              setUser(currentUser);
               setUserRole(null);
               setIsBanned(false);
             }
-
-            setUser(currentUser);
           } catch (err) {
             setError(err.message);
             setUser(currentUser);
@@ -108,6 +184,17 @@ export function AuthProvider({ children }) {
       const data = snap.exists() ? snap.data() : {};
       const role = data.role || null;
       const banned = data.banned === true;
+
+      // Cache the profile
+      const profile = {
+        role,
+        banned,
+        referralCode: data.referralCode || null,
+        xp: data.xp || 0,
+        balance: data.balance || 0,
+        referralCount: data.referralCount || 0,
+      };
+      saveCachedProfile(uid, profile);
 
       setUserRole(role);
       setIsBanned(banned);
@@ -250,6 +337,16 @@ export function AuthProvider({ children }) {
         referredBy: referredBy
       });
 
+      // Cache the new profile
+      saveCachedProfile(uid, {
+        role: 'user',
+        banned: false,
+        referralCode: newReferralCode,
+        xp: 0,
+        balance: 0,
+        referralCount: 0,
+      });
+
       setUserRole('user');
       setIsBanned(false);
       return { user: result.user, role: 'user', banned: false };
@@ -271,6 +368,8 @@ export function AuthProvider({ children }) {
       let role = 'user';
       let banned = false;
 
+      let profileToCache;
+
       if (!snap.exists()) {
         let referredBy = null;
         if (referralCode) {
@@ -291,26 +390,39 @@ export function AuthProvider({ children }) {
           referralCode: newReferralCode,
           referredBy: referredBy
         });
+
+        profileToCache = { role, banned: false, referralCode: newReferralCode, xp: 0, balance: 0, referralCount: 0 };
       } else {
         const data = snap.data();
         role = data.role || 'user';
         banned = data.banned === true;
 
+        let refCode = data.referralCode;
         // Ensure existing users have a referral code if they log in and don't have one
         if (!data.referralCode) {
+          refCode = generateReferralCode();
           await updateDoc(userRef, {
-            referralCode: generateReferralCode(),
+            referralCode: refCode,
             xp: data.xp || 0,
             balance: data.balance || 0,
             referralCount: data.referralCount || 0
           });
         }
+
+        profileToCache = {
+          role,
+          banned,
+          referralCode: refCode || null,
+          xp: data.xp || 0,
+          balance: data.balance || 0,
+          referralCount: data.referralCount || 0,
+        };
       }
 
+      // Cache the profile
+      saveCachedProfile(uid, profileToCache);
+
       if (banned) {
-        // Option specific to Google Auth: 
-        // We might want to just logout immediately if they are banned
-        // But throwing error here will be caught in UI
         throw new Error('This account has been banned.');
       }
 
@@ -341,6 +453,10 @@ export function AuthProvider({ children }) {
   const logout = async () => {
     setError(null);
     try {
+      // Clear cached profile before signing out
+      if (user?.uid) {
+        clearCachedProfile(user.uid);
+      }
       await signOut(auth);
       setUser(null);
       setUserRole(null);

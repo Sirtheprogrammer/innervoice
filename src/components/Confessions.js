@@ -9,41 +9,15 @@ import { useTheme } from '../context/ThemeContext';
 import { fuzzySearch } from '../utils/fuzzySearch';
 import '../styles/Confessions.css';
 
-/**
- * Calculate a ranking score that balances recency and engagement
- * Newer posts get priority, but engagement (likes + comments) boosts the score
- */
-const calculateRankingScore = (confession) => {
-  const now = Date.now();
-  const createdAt = confession.createdAt?.toDate?.() || new Date(confession.createdAt);
-  const ageInHours = (now - createdAt.getTime()) / (1000 * 60 * 60);
-
-  // Engagement score (likes count more than comments for quick engagement)
-  const likes = confession.likeCount || 0;
-  const comments = confession.commentCount || 0;
-  const engagementScore = (likes * 2) + (comments * 3);
-
-  // Recency score - newer posts get higher base score
-  // Posts decay over time but engagement can boost them back up
-  // Using logarithmic decay to keep very old engaged posts somewhat visible
-  const recencyScore = Math.max(0, 100 - Math.log(ageInHours + 1) * 15);
-
-  // Boost factor for very recent posts (within last 24 hours)
-  const recentBoost = ageInHours < 24 ? 50 : (ageInHours < 72 ? 20 : 0);
-
-  // Combined score: base recency + engagement boost + recent post boost
-  return recencyScore + (engagementScore * 2) + recentBoost;
-};
-
 export default function Confessions({ searchQuery = '', sidebarOpen = false }) {
   const navigate = useNavigate();
   const { user, isBanned } = useAuth();
   const { theme } = useTheme();
-  const CONFESSIONS_PER_PAGE = 12;
   const CACHE_KEY = 'cached_confessions';
   const CACHE_TIMESTAMP_KEY = 'confessions_cache_timestamp';
   const CATEGORIES_CACHE_KEY = 'cached_categories';
   const CATEGORIES_CACHE_TIMESTAMP_KEY = 'categories_cache_timestamp';
+  const CACHE_TTL = 5 * 60 * 1000; // 5 minutes cache TTL
   
   const [confessions, setConfessions] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -57,40 +31,32 @@ export default function Confessions({ searchQuery = '', sidebarOpen = false }) {
   const [categories, setCategories] = useState([]);
   const [formCategory, setFormCategory] = useState('');
   const [activeCategory, setActiveCategory] = useState('all');
-  const [currentPage, setCurrentPage] = useState(1);
   const confessionsListRef = useRef(null);
 
-  // Sort and filter confessions with smart ranking + pagination
-  const { paginatedConfessions, totalPages, totalConfessions } = useMemo(() => {
-    // First, sort all confessions by ranking score
-    let sortedConfessions = [...confessions].sort((a, b) => {
-      return calculateRankingScore(b) - calculateRankingScore(a);
+  // Sort and filter confessions — newest first, no pagination
+  const { displayedConfessions, totalConfessions } = useMemo(() => {
+    // Sort by createdAt descending (newest first)
+    let sorted = [...confessions].sort((a, b) => {
+      const dateA = a.createdAt instanceof Date ? a.createdAt : (a.createdAt?.toDate?.() || new Date(a.createdAt));
+      const dateB = b.createdAt instanceof Date ? b.createdAt : (b.createdAt?.toDate?.() || new Date(b.createdAt));
+      return dateB.getTime() - dateA.getTime();
     });
 
-    // Then apply search filter if there's a query
+    // Apply search filter if there's a query
     if (searchQuery && searchQuery.trim()) {
-      sortedConfessions = fuzzySearch(sortedConfessions, searchQuery, ['title', 'content'], 0.3);
+      sorted = fuzzySearch(sorted, searchQuery, ['title', 'content'], 0.3);
     }
 
     // Apply active category filter
     if (activeCategory !== 'all') {
-      sortedConfessions = sortedConfessions.filter(c => c.categoryId === activeCategory);
+      sorted = sorted.filter(c => c.categoryId === activeCategory);
     }
 
-    const totalCount = sortedConfessions.length;
-    const totalPagesCount = Math.ceil(totalCount / CONFESSIONS_PER_PAGE);
-    
-    // Calculate pagination
-    const startIndex = (currentPage - 1) * CONFESSIONS_PER_PAGE;
-    const endIndex = startIndex + CONFESSIONS_PER_PAGE;
-    const paginated = sortedConfessions.slice(startIndex, endIndex);
-
     return {
-      paginatedConfessions: paginated,
-      totalPages: totalPagesCount,
-      totalConfessions: totalCount
+      displayedConfessions: sorted,
+      totalConfessions: sorted.length
     };
-  }, [confessions, searchQuery, activeCategory, currentPage, CONFESSIONS_PER_PAGE]);
+  }, [confessions, searchQuery, activeCategory]);
 
   // Track liked confessions (persisted in localStorage)
   const [likedConfessions, setLikedConfessions] = useState(() => {
@@ -129,20 +95,7 @@ export default function Confessions({ searchQuery = '', sidebarOpen = false }) {
     }
   };
 
-  useEffect(() => {
-    setCurrentPage(1); // Reset to first page when category changes
-    fetchConfessions();
-  }, [activeCategory]); // Re-fetch when category changes
-
-  // Scroll to top when page changes
-  useEffect(() => {
-    if (confessionsListRef.current) {
-      confessionsListRef.current.scrollIntoView({
-        behavior: 'smooth',
-        block: 'start'
-      });
-    }
-  }, [currentPage]);
+  // Category filtering is handled client-side via useMemo, no re-fetch needed
 
   // localStorage helper functions
   const getCachedConfessions = () => {
@@ -152,6 +105,16 @@ export default function Confessions({ searchQuery = '', sidebarOpen = false }) {
     } catch (err) {
       console.error('Error reading cache:', err);
       return [];
+    }
+  };
+
+  const isCacheFresh = () => {
+    try {
+      const timestamp = localStorage.getItem(CACHE_TIMESTAMP_KEY);
+      if (!timestamp) return false;
+      return (Date.now() - parseInt(timestamp, 10)) < CACHE_TTL;
+    } catch {
+      return false;
     }
   };
 
@@ -165,19 +128,23 @@ export default function Confessions({ searchQuery = '', sidebarOpen = false }) {
   };
 
   const mergeConfessions = (cachedConfessions, newConfessions) => {
-    // Create a map of new confessions by ID
+    // Create a map of new confessions by ID for fast lookup
     const newConfessionsMap = new Map(newConfessions.map(c => [c.id, c]));
     
-    // Update cached confessions with new data
+    // Update cached confessions with fresh data
     const mergedConfessions = cachedConfessions.map(c => 
       newConfessionsMap.get(c.id) || c
     );
+
+    // Remove any cached items that were deleted from the server
+    const freshIds = new Set(newConfessions.map(c => c.id));
+    const validMerged = mergedConfessions.filter(c => freshIds.has(c.id));
 
     // Add completely new confessions at the beginning
     const existingIds = new Set(cachedConfessions.map(c => c.id));
     const newItems = newConfessions.filter(c => !existingIds.has(c.id));
     
-    return [...newItems, ...mergedConfessions];
+    return [...newItems, ...validMerged];
   };
 
   // Categories cache helper functions
@@ -216,24 +183,32 @@ export default function Confessions({ searchQuery = '', sidebarOpen = false }) {
     return [...mergedCategories, ...newItems];
   };
 
-  const fetchConfessions = async () => {
-    setLoading(true);
+  const fetchConfessions = async (forceRefresh = false) => {
     setError('');
     try {
-      const filterId = activeCategory === 'all' ? null : activeCategory;
-      
       // Get cached confessions
       const cachedConfessions = getCachedConfessions();
-      
-      // If we have cache, display it first
-      if (cachedConfessions.length > 0) {
+      const cacheFresh = isCacheFresh();
+
+      // If cache is fresh and we're not forcing a refresh, use cache only
+      if (cachedConfessions.length > 0 && cacheFresh && !forceRefresh) {
         setConfessions(cachedConfessions);
+        setLoading(false);
+        return;
       }
 
-      // Fetch new confessions from Firestore
-      const newConfessions = await getAllConfessions(50, filterId);
+      // Show cached data immediately while fetching fresh data
+      if (cachedConfessions.length > 0) {
+        setConfessions(cachedConfessions);
+        setLoading(false);
+      } else {
+        setLoading(true);
+      }
+
+      // Fetch fresh confessions from Firestore (no category filter at fetch level — filter client-side)
+      const newConfessions = await getAllConfessions();
       
-      // Merge new with cached
+      // Merge new with cached (or use fresh data directly)
       const mergedConfessions = cachedConfessions.length > 0 
         ? mergeConfessions(cachedConfessions, newConfessions)
         : newConfessions;
@@ -244,7 +219,10 @@ export default function Confessions({ searchQuery = '', sidebarOpen = false }) {
       
     } catch (err) {
       console.error('Error fetching confessions:', err);
-      setError('Failed to load confessions');
+      // Only show error if we have no cached data to display
+      if (confessions.length === 0) {
+        setError('Failed to load confessions');
+      }
     } finally {
       setLoading(false);
     }
@@ -313,8 +291,8 @@ export default function Confessions({ searchQuery = '', sidebarOpen = false }) {
       setFormSuccess('Your confession has been posted!');
       setShowForm(false);
 
-      // Refresh the confessions list
-      await fetchConfessions();
+      // Force refresh the confessions list to show the new confession
+      await fetchConfessions(true);
 
       // Clear success message after 3 seconds
       setTimeout(() => setFormSuccess(''), 3000);
@@ -614,7 +592,7 @@ export default function Confessions({ searchQuery = '', sidebarOpen = false }) {
                 matching "{searchQuery}"
               </div>
             )}
-            {paginatedConfessions.map((confession) => (
+            {displayedConfessions.map((confession) => (
               <div
                 key={confession.id}
                 className="confession-card"
@@ -683,32 +661,6 @@ export default function Confessions({ searchQuery = '', sidebarOpen = false }) {
           </>
         )}
       </div>
-
-      {/* Pagination Controls */}
-      {totalPages > 1 && totalConfessions > 0 && (
-        <div className="pagination-container">
-          <button
-            className="pagination-btn"
-            onClick={() => setCurrentPage(prev => Math.max(1, prev - 1))}
-            disabled={currentPage === 1}
-          >
-            ← Previous
-          </button>
-
-          <div className="pagination-info">
-            Page <span className="page-number">{currentPage}</span> of <span className="page-number">{totalPages}</span>
-            <span className="pagination-count">({paginatedConfessions.length} of {totalConfessions})</span>
-          </div>
-
-          <button
-            className="pagination-btn"
-            onClick={() => setCurrentPage(prev => Math.min(totalPages, prev + 1))}
-            disabled={currentPage === totalPages}
-          >
-            Next →
-          </button>
-        </div>
-      )}
     </div>
   );
 }

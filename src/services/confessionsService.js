@@ -113,28 +113,15 @@ export async function createConfession(content, title = null, userId = null, cat
 }
 
 /**
- * Get all confessions, ordered by newest first, optionally filtered by category
+ * Get all confessions, ordered by newest first.
+ * Fetches all confessions in a single query (category filtering is done client-side).
  */
-export async function getAllConfessions(pageSize = 20, categoryId = null) {
+export async function getAllConfessions() {
   try {
-    let q;
-
-    if (categoryId) {
-      // Note: This requires a composite index on Firestore: categoryId (Asc) + createdAt (Desc)
-      // If index is missing, Firestore will throw an error with a link to create it.
-      q = query(
-        collection(db, CONFESSIONS_COLLECTION),
-        where('categoryId', '==', categoryId),
-        orderBy('createdAt', 'desc'),
-        limit(pageSize)
-      );
-    } else {
-      q = query(
-        collection(db, CONFESSIONS_COLLECTION),
-        orderBy('createdAt', 'desc'),
-        limit(pageSize)
-      );
-    }
+    const q = query(
+      collection(db, CONFESSIONS_COLLECTION),
+      orderBy('createdAt', 'desc')
+    );
 
     const querySnapshot = await getDocs(q);
     return querySnapshot.docs.map((doc) => ({
